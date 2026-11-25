@@ -140,11 +140,15 @@ export default function HopeAssistant() {
         return;
       }
       const code = e instanceof AssistantError ? e.code : "unavailable";
-      const message = e instanceof AssistantError ? e.message : "AOH AI is unavailable right now. Please try again shortly.";
+      // The live assistant currently rejects signed-out visitors; say so plainly instead of asking them to use the portal.
+      const publicBlocked = surface === "public" && ["unauthorized", "auth_required", "forbidden"].includes(code);
+      const message = publicBlocked
+        ? "The full AI chat is available after you sign in. Here is what I can answer from the school's public information."
+        : e instanceof AssistantError ? e.message : "AOH AI is unavailable right now. Please try again shortly.";
       // Preserve the actual failure, even when a limited local answer is available.
       // Local/failed/partial replies must never become AI conversation context.
       const hasPartialReply = receivedText;
-      if (!hasPartialReply && ["missing_key", "unavailable", "network", "timeout", "server_error", "empty"].includes(code)) {
+      if (!hasPartialReply && (["missing_key", "unavailable", "network", "timeout", "server_error", "empty"].includes(code) || publicBlocked)) {
         const local = answerLocally(content, {
           academyName: state.settings.academyName,
           programmes: state.programs.map((p) => ({ title: p.title, category: p.category, description: p.description })),
@@ -215,7 +219,7 @@ export default function HopeAssistant() {
 
       {open && (
         <div
-          role="dialog"
+          role="region"
           aria-label={label}
           className="fixed inset-0 z-40 flex flex-col bg-white text-[#0d0d0d] sm:inset-auto sm:bottom-5 sm:right-5 sm:h-[min(680px,calc(100dvh-2.5rem))] sm:w-[440px] sm:overflow-hidden sm:rounded-3xl sm:border sm:border-black/10 sm:shadow-2xl"
         >
