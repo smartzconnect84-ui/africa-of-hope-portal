@@ -165,7 +165,6 @@ export default function HeroSlider({ onOpenApply, onEnterPortal }: HeroSliderPro
   const slide = safeSlides[current % safeSlides.length];
   const copy = state.websiteSettings.publicCopy;
   const badgeText = (copy["hero.badge"] || "").trim();
-  const applyLabel = copy["hero.apply"] || "Apply Online";
   const donateLabel = copy["hero.donate"] || "Donate";
   const verifyLabel = copy["hero.verify"] || "Verify Certificate";
   const portalLabel = copy["hero.portal"] || "School Portal Login";
@@ -279,14 +278,14 @@ export default function HeroSlider({ onOpenApply, onEnterPortal }: HeroSliderPro
                 onClick={onOpenApply}
                 className="group inline-flex h-10 min-w-0 shrink items-center justify-center gap-1 whitespace-nowrap rounded-full bg-amber-400 px-3 text-xs font-extrabold sm:h-12 sm:gap-2 sm:px-7 sm:text-base text-emerald-950 shadow-[0_18px_40px_-12px_rgba(251,191,36,0.7)] transition hover:bg-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-950 active:scale-[0.98]"
               >
-                {applyLabel}
+                Apply!
                 <ArrowRight className="hidden h-5 w-5 transition sm:block-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
               </button>
               <a
                 href="#programmes"
                 className="inline-flex h-10 min-w-0 shrink items-center justify-center gap-1 whitespace-nowrap rounded-full border border-white/30 bg-white/10 px-3 text-xs font-bold text-white backdrop-blur transition hover:bg-white/20 active:scale-[0.98] sm:h-12 sm:gap-2 sm:px-7 sm:text-base"
               >
-                Explore programmes
+                Explore
                 <ArrowUpRight className="hidden h-5 w-5 sm:block" aria-hidden="true" />
               </a>
               <a
