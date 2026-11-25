@@ -40,6 +40,16 @@ export default function KnockNotificationBell() {
     return () => { window.removeEventListener("keydown", onKey); window.removeEventListener("mousedown", onClick); };
   }, [open]);
 
+  const unreadCount = state?.metadata?.unread_count ?? 0;
+  useEffect(() => {
+    // Installed app icon count (Android, desktop and iOS home-screen apps).
+    const nav = navigator as Navigator & { setAppBadge?: (n?: number) => Promise<void>; clearAppBadge?: () => Promise<void> };
+    try {
+      if (unreadCount > 0) void nav.setAppBadge?.(unreadCount)?.catch?.(() => undefined);
+      else void nav.clearAppBadge?.()?.catch?.(() => undefined);
+    } catch { /* badge unsupported */ }
+  }, [unreadCount]);
+
   if (!ctx) return null;
   const items = (state?.items ?? []) as unknown as FeedItem[];
   const unread = state?.metadata?.unread_count ?? 0;
