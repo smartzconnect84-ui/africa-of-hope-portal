@@ -21,7 +21,7 @@ function itemText(item: FeedItem): { title: string; body: string } {
   const data = item.data ?? {};
   return {
     title: plain(head ?? String(data.title ?? item.source?.key ?? "Notification")),
-    body: plain(body ?? String(data.message ?? "")),
+    body: plain(data.message ? String(data.message) : (body ?? "")),
   };
 }
 
