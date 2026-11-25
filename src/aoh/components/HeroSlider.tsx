@@ -259,7 +259,7 @@ export default function HeroSlider({ onOpenApply, onEnterPortal }: HeroSliderPro
                 >
                   <h1 className="text-balance break-words text-[2.1rem] font-extrabold leading-[1.02] tracking-[-0.03em] text-white min-[480px]:text-5xl sm:text-6xl lg:text-7xl">
                     {slide.title}
-                    {slide.highlight ? (
+                    {false && slide.highlight ? (
                       <>
                         <br />
                         <span className="bg-gradient-to-r from-amber-300 via-amber-400 to-lime-300 bg-clip-text text-transparent">
