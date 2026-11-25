@@ -1082,3 +1082,6 @@ html { font-size: 115%; }
 .text-\[14px\] { font-size: 16.1px !important; }
 .text-\[15px\] { font-size: 17.25px !important; }
 .text-\[16px\] { font-size: 18.4px !important; }
+
+/* Hero: keep headline white over the photo in every mode. */
+html .aoh-public .aoh-hero-v2 h1 { color: #ffffff !important; }

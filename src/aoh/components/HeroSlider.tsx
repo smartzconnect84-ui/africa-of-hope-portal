@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -11,8 +11,6 @@ import {
   Pause,
   Play,
   ShieldCheck,
-  Sparkles,
-  Star,
   Users,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
@@ -172,6 +170,14 @@ export default function HeroSlider({ onOpenApply, onEnterPortal }: HeroSliderPro
   const verifyLabel = copy["hero.verify"] || "Verify Certificate";
   const portalLabel = copy["hero.portal"] || "School Portal Login";
 
+  const idx = current % safeSlides.length;
+  const facts = [
+    { icon: GraduationCap, value: "31", label: "Certificate programmes" },
+    { icon: BadgeCheck, value: "100%", label: "Verifiable certificates" },
+    { icon: HeartHandshake, value: "Non-profit", label: "Mission-led school" },
+    { icon: Users, value: "2026/27", label: "Intake now open" },
+  ];
+
   return (
     <section
       aria-roledescription="carousel"
@@ -192,271 +198,207 @@ export default function HeroSlider({ onOpenApply, onEnterPortal }: HeroSliderPro
         }
         touchX.current = null;
       }}
-      className="aoh-hero relative overflow-hidden bg-[#fdfcf7] text-emerald-950"
+      className="aoh-hero-v2 relative isolate overflow-hidden bg-emerald-950 text-white"
     >
-      {/* Light editorial backdrop */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-amber-50/80 via-[#fdfcf7] to-emerald-50/60" />
-        <div className="absolute -left-32 -top-32 h-[26rem] w-[26rem] rounded-full bg-amber-200/40 blur-3xl" />
-        <div className="absolute -right-40 top-24 h-[30rem] w-[30rem] rounded-full bg-emerald-200/50 blur-3xl" />
-        <div
-          className="absolute inset-0 opacity-[0.5]"
-          style={{
-            backgroundImage: "radial-gradient(rgba(6,78,59,0.10) 1px, transparent 1px)",
-            backgroundSize: "22px 22px",
-            maskImage: "linear-gradient(to bottom, black 0%, transparent 62%)",
-            WebkitMaskImage: "linear-gradient(to bottom, black 0%, transparent 62%)",
-          }}
-        />
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-800 via-amber-400 to-emerald-800" />
+      {/* Full-bleed photography */}
+      <div aria-hidden="true" className="absolute inset-0 -z-10">
+        {safeSlides.map((s, i) => {
+          const active = i === idx;
+          return (
+            <div
+              key={s.image + i}
+              className={cn(
+                "absolute inset-0 transition-opacity duration-[1200ms] ease-out",
+                active ? "opacity-100" : "opacity-0",
+              )}
+            >
+              <img
+                src={s.image}
+                alt=""
+                draggable={false}
+                loading={i === 0 ? "eager" : "lazy"}
+                decoding="async"
+                className={cn(
+                  "h-full w-full object-cover object-center",
+                  active && !prefersReducedMotion ? "aoh-hero-kenburns" : "",
+                )}
+              />
+            </div>
+          );
+        })}
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-950 via-emerald-950/85 to-emerald-950/25" />
+        <div className="absolute inset-0 bg-gradient-to-t from-emerald-950 via-transparent to-emerald-950/40" />
+        <div className="absolute -left-24 bottom-0 h-[26rem] w-[26rem] rounded-full bg-amber-400/20 blur-3xl" />
+        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-amber-400 via-emerald-400 to-amber-400" />
       </div>
 
-      <div className="relative mx-auto w-full max-w-6xl px-4 pb-10 pt-6 sm:px-6 sm:pb-14 sm:pt-10 lg:pb-16 lg:pt-12">
-        <div className="grid items-center gap-6 lg:grid-cols-[1.02fr_0.98fr] lg:gap-10">
-          {/* ——— Copy ——— */}
+      <div className="relative mx-auto flex min-h-[calc(100svh-7rem)] w-full max-w-7xl flex-col justify-between px-4 pb-6 pt-10 sm:px-6 sm:pt-14 lg:px-8">
+        <div className="grid items-center gap-10 lg:grid-cols-[1.25fr_0.75fr]">
+          {/* Copy */}
           <div className="aoh-hero-copy min-w-0">
             <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
-              <span className="inline-flex min-w-0 max-w-full items-center gap-2 rounded-full border border-emerald-900/10 bg-white/80 py-1.5 pl-1.5 pr-3 text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-900 shadow-sm backdrop-blur">
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-900 px-2.5 py-1 text-[10px] tracking-[0.12em] text-amber-300">
-                  <span className="relative flex h-1.5 w-1.5">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-300 opacity-75" />
-                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-300" />
-                  </span>
-                  2026 / 27
+              <span className="inline-flex items-center gap-2 rounded-full bg-amber-400 px-3.5 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.16em] text-emerald-950">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-900 opacity-60" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-900" />
                 </span>
-                <span className="min-w-0 flex-1 truncate">{slide.eyebrow}</span>
+                Admissions 2026 / 27
               </span>
-              {badgeText ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-400 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-950 shadow-[0_8px_24px_-8px_rgba(251,191,36,0.8)]">
-                  <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-                  {badgeText}
-                </span>
-              ) : null}
+              <span className="min-w-0 max-w-full truncate rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-50 backdrop-blur">
+                {badgeText || slide.eyebrow}
+              </span>
             </div>
 
-            <div aria-live="polite" className="mt-5">
+            <div aria-live="polite" className="mt-6">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={current}
-                  initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 18 }}
+                  initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 22 }}
                   animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-                  exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -12 }}
-                  transition={{ duration: prefersReducedMotion ? 0.2 : 0.45, ease: "easeOut" }}
+                  exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -14 }}
+                  transition={{ duration: prefersReducedMotion ? 0.2 : 0.5, ease: "easeOut" }}
                 >
-                  <h1 className="text-balance break-words text-[1.65rem] font-extrabold leading-[1.08] tracking-tight text-emerald-950 min-[480px]:text-4xl sm:text-5xl lg:text-6xl">
+                  <h1 className="text-balance break-words text-[2.1rem] font-extrabold leading-[1.02] tracking-[-0.03em] text-white min-[480px]:text-5xl sm:text-6xl lg:text-7xl">
                     {slide.title}
                     {slide.highlight ? (
                       <>
                         <br />
-                        <span className="relative inline-block text-emerald-800">
+                        <span className="bg-gradient-to-r from-amber-300 via-amber-400 to-lime-300 bg-clip-text text-transparent">
                           {slide.highlight}
-                          <svg
-                            aria-hidden="true"
-                            viewBox="0 0 300 12"
-                            preserveAspectRatio="none"
-                            className="absolute -bottom-1.5 left-0 h-3 w-full text-amber-400"
-                          >
-                            <path
-                              d="M4 8 C 70 3, 200 3, 296 7"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="5"
-                              strokeLinecap="round"
-                            />
-                          </svg>
                         </span>
                       </>
                     ) : null}
                   </h1>
-                  <p className="mt-4 max-w-[56ch] text-pretty text-[15px] leading-relaxed text-slate-600 sm:text-lg">
+                  <p className="mt-5 max-w-[56ch] text-pretty text-base leading-relaxed text-emerald-50/90 sm:text-lg">
                     {slide.description}
                   </p>
                 </motion.div>
               </AnimatePresence>
             </div>
 
-            <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               <button
                 type="button"
                 onClick={onOpenApply}
-                className="group inline-flex h-[30px] w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-950 px-3.5 text-[14.4px] font-bold text-white shadow-[0_18px_40px_-14px_rgba(6,78,59,0.6)] transition hover:bg-emerald-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 focus-visible:ring-offset-2 active:scale-[0.98] sm:w-auto"
+                className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-amber-400 px-7 text-base font-extrabold text-emerald-950 shadow-[0_18px_40px_-12px_rgba(251,191,36,0.7)] transition hover:bg-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-950 active:scale-[0.98] sm:w-auto"
               >
                 {applyLabel}
-                <ArrowRight className="h-4 w-4 text-amber-300 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
+                <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
               </button>
               <a
                 href="#programmes"
-                className="inline-flex h-[30px] w-full items-center justify-center gap-1.5 rounded-lg border border-emerald-900/15 bg-white px-3.5 text-[14.4px] font-bold text-emerald-950 shadow-sm transition hover:border-emerald-900/30 hover:bg-emerald-50 active:scale-[0.98] sm:w-auto"
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 px-7 text-base font-bold text-white backdrop-blur transition hover:bg-white/20 active:scale-[0.98] sm:w-auto"
               >
                 Explore programmes
-                <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+                <ArrowUpRight className="h-5 w-5" aria-hidden="true" />
               </a>
               <a
                 href="/donate"
-                className="inline-flex h-[30px] w-full items-center justify-center gap-1.5 rounded-lg bg-amber-400 px-3.5 text-[14.4px] font-bold text-emerald-950 shadow-[0_14px_30px_-12px_rgba(251,191,36,0.8)] transition hover:bg-amber-300 active:scale-[0.98] sm:w-auto"
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full px-4 text-base font-bold text-amber-300 underline-offset-4 transition hover:text-amber-200 hover:underline sm:w-auto"
               >
-                <HeartHandshake className="h-4 w-4" aria-hidden="true" />
+                <HeartHandshake className="h-5 w-5" aria-hidden="true" />
                 {donateLabel}
               </a>
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-              <a
-                href="/verify"
-                className="inline-flex min-h-[44px] items-center gap-1.5 font-semibold text-emerald-800 underline-offset-4 transition hover:text-emerald-950 hover:underline"
-              >
-                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-                {verifyLabel}
-              </a>
-            </div>
-
-            {/* Slide selector removed per design review — prev/next + caption controls remain on the visual card. */}
+            <a
+              href="/verify"
+              className="mt-3 inline-flex min-h-[44px] items-center gap-1.5 text-sm font-semibold text-emerald-100 underline-offset-4 transition hover:text-white hover:underline"
+            >
+              <ShieldCheck className="h-4 w-4 text-amber-300" aria-hidden="true" />
+              {verifyLabel}
+            </a>
           </div>
 
-          {/* ——— Visual ——— */}
-          <div className="relative mx-auto w-full max-w-[560px] lg:mx-0">
-            {/* Arch frame */}
-            <div className="relative overflow-hidden rounded-[2rem] rounded-tr-[4.5rem] border border-emerald-900/10 bg-white shadow-[0_40px_80px_-30px_rgba(6,78,59,0.35)]">
-              <div className="relative aspect-[4/3.6] min-h-[240px] w-full overflow-hidden bg-emerald-100 min-[480px]:aspect-[4/4] sm:aspect-[5/4.6] sm:min-h-[320px] lg:aspect-[4/4.6] lg:min-h-[400px]">
-                {safeSlides.map((s, i) => {
-                  const active = i === current % safeSlides.length;
-                  return (
-                    <div
-                      key={s.image + i}
-                      className={cn(
-                        "absolute inset-0 transition-opacity duration-[1100ms] ease-out",
-                        active ? "opacity-100" : "opacity-0",
-                      )}
-                      aria-hidden={!active}
-                    >
-                      <img
-                        src={s.image}
-                        alt=""
-                        aria-hidden="true"
-                        draggable={false}
-                        loading={i === 0 ? "eager" : "lazy"}
-                        decoding="async"
-                        className={cn(
-                          "h-full w-full object-cover object-center",
-                          active && !prefersReducedMotion ? "aoh-hero-kenburns" : "",
-                        )}
-                      />
-                    </div>
-                  );
-                })}
-                {/* Caption */}
-                <div className="absolute inset-x-4 bottom-3">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={current}
-                      initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 12 }}
-                      animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
-                      exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
-                      transition={{ duration: 0.35 }}
-                      className="flex items-center justify-between gap-1.5 rounded-lg border border-white/20 bg-emerald-950/55 px-2 py-1 backdrop-blur-xl"
-                    >
-                      <p className="min-w-0 truncate text-[11px] font-semibold text-white">
-                        <span className="mr-2 font-extrabold tabular-nums text-amber-300">
-                          {String((current % safeSlides.length) + 1).padStart(2, "0")} /{" "}
-                          {String(safeSlides.length).padStart(2, "0")}
-                        </span>
-                        <span className="truncate">{slide.eyebrow}</span>
-                      </p>
-                      <span className="flex shrink-0 items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={prev}
-                          aria-label="Previous highlight"
-                          className="grid h-6 w-6 place-items-center rounded-full bg-white/10 text-white ring-1 ring-white/20 transition hover:bg-white/20 active:scale-95"
-                        >
-                          <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={next}
-                          aria-label="Next highlight"
-                          className="grid h-6 w-6 place-items-center rounded-full bg-amber-400 text-emerald-950 transition hover:bg-amber-300 active:scale-95"
-                        >
-                          <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setPaused((p) => !p)}
-                          aria-label={paused ? "Resume slideshow" : "Pause slideshow"}
-                          aria-pressed={paused}
-                          className="grid h-6 w-6 place-items-center rounded-full bg-white/10 text-white ring-1 ring-white/20 transition hover:bg-white/20 active:scale-95"
-                        >
-                          {paused ? <Play className="h-3.5 w-3.5" aria-hidden="true" /> : <Pause className="h-3.5 w-3.5" aria-hidden="true" />}
-                        </button>
-                      </span>
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-              </div>
-            </div>
-
-            {/* Floating: intake */}
-            <div className="absolute -right-2 bottom-24 hidden w-[230px] rounded-2xl border border-emerald-900/10 bg-white/95 p-3.5 shadow-xl shadow-emerald-950/10 backdrop-blur sm:block lg:-right-6">
-              <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-800">
-                <GraduationCap className="h-4 w-4" aria-hidden="true" /> Intake open
-              </p>
-              <p className="mt-1.5 text-[13px] font-semibold leading-snug text-emerald-950">
-                Apply in minutes — no payment to start
-              </p>
-              <div className="mt-2.5 flex gap-2">
-                <button
-                  type="button"
-                  onClick={onOpenApply}
-                  className="h-9 flex-1 rounded-xl bg-emerald-950 text-xs font-bold text-white transition hover:bg-emerald-900"
-                >
-                  Apply
-                </button>
-                <a
-                  href="/verify"
-                  className="grid h-9 flex-1 place-items-center rounded-xl border border-emerald-900/15 text-xs font-bold text-emerald-950 transition hover:bg-emerald-50"
-                >
-                  Verify
-                </a>
-              </div>
-            </div>
-
-            {/* Thumbnails */}
-            {safeSlides.length > 1 ? (
-              <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1">
-                {safeSlides.slice(0, 5).map((s, i) => {
-                  const active = i === current % safeSlides.length;
-                  return (
+          {/* Slide card */}
+          <div className="relative mx-auto w-full max-w-[420px] lg:mx-0 lg:justify-self-end">
+            <div className="rounded-[2rem] rounded-tr-[4rem] border border-white/20 bg-white/10 p-3 shadow-2xl shadow-black/30 backdrop-blur-xl">
+              <div className="relative aspect-[4/4.4] overflow-hidden rounded-[1.5rem] rounded-tr-[3.2rem] bg-emerald-900">
+                {safeSlides.map((s, i) => (
+                  <img
+                    key={`card-${s.image}-${i}`}
+                    src={s.image}
+                    alt=""
+                    aria-hidden="true"
+                    draggable={false}
+                    loading={i === 0 ? "eager" : "lazy"}
+                    className={cn(
+                      "absolute inset-0 h-full w-full object-cover transition-opacity duration-[1000ms]",
+                      i === idx ? "opacity-100" : "opacity-0",
+                    )}
+                  />
+                ))}
+                <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/80 via-transparent to-transparent" />
+                <div className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-2">
+                  <p className="min-w-0 truncate text-xs font-bold text-white">
+                    <span className="mr-2 tabular-nums text-amber-300">
+                      {String(idx + 1).padStart(2, "0")} / {String(safeSlides.length).padStart(2, "0")}
+                    </span>
+                    {slide.eyebrow}
+                  </p>
+                  <span className="flex shrink-0 items-center gap-1.5">
                     <button
-                      key={`thumb-${s.image}-${i}`}
                       type="button"
-                      onClick={() => goTo(i)}
-                      aria-label={`View photo ${i + 1}`}
-                      aria-current={active}
-                      className={cn(
-                        "relative h-12 w-[72px] shrink-0 overflow-hidden rounded-lg border-2 transition active:scale-95",
-                        active
-                          ? "border-amber-400 shadow-lg"
-                          : "border-white opacity-70 hover:opacity-100",
-                      )}
+                      onClick={prev}
+                      aria-label="Previous highlight"
+                      className="grid h-9 w-9 place-items-center rounded-full bg-white/15 text-white ring-1 ring-white/30 backdrop-blur transition hover:bg-white/30 active:scale-95"
                     >
-                      <img src={s.image} alt="" aria-hidden="true" className="h-full w-full object-cover" loading="lazy" />
-                      {active ? <span className="absolute inset-0 ring-1 ring-inset ring-emerald-950/20" /> : null}
+                      <ChevronLeft className="h-4 w-4" aria-hidden="true" />
                     </button>
-                  );
-                })}
-                <div className="ml-1 hidden items-center gap-1.5 rounded-md border border-emerald-900/10 bg-white/80 px-2 py-1 backdrop-blur min-[480px]:flex">
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-950">
-                    <Users className="h-3 w-3 text-emerald-700" aria-hidden="true" /> Cohort community
-                  </span>
-                  <span className="h-3 w-px bg-emerald-900/15" aria-hidden="true" />
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-950">
-                    <ShieldCheck className="h-3 w-3 text-emerald-700" aria-hidden="true" /> Transparent fees
+                    <button
+                      type="button"
+                      onClick={next}
+                      aria-label="Next highlight"
+                      className="grid h-9 w-9 place-items-center rounded-full bg-amber-400 text-emerald-950 transition hover:bg-amber-300 active:scale-95"
+                    >
+                      <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaused((p) => !p)}
+                      aria-label={paused ? "Resume slideshow" : "Pause slideshow"}
+                      aria-pressed={paused}
+                      className="grid h-9 w-9 place-items-center rounded-full bg-white/15 text-white ring-1 ring-white/30 backdrop-blur transition hover:bg-white/30 active:scale-95"
+                    >
+                      {paused ? <Play className="h-4 w-4" aria-hidden="true" /> : <Pause className="h-4 w-4" aria-hidden="true" />}
+                    </button>
                   </span>
                 </div>
               </div>
-            ) : null}
+              <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/15" aria-hidden="true">
+                <div
+                  className="h-full rounded-full bg-amber-400 transition-[width] duration-100 ease-linear"
+                  style={{ width: `${paused ? 100 : progress}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="absolute -left-4 top-10 hidden items-center gap-2 rounded-2xl bg-amber-400 px-3.5 py-2.5 text-emerald-950 shadow-xl sm:flex lg:-left-10">
+              <GraduationCap className="h-5 w-5" aria-hidden="true" />
+              <span className="text-xs font-extrabold leading-tight">
+                Apply in minutes
+                <br />
+                <span className="font-semibold">No payment to start</span>
+              </span>
+            </div>
           </div>
         </div>
+
+        {/* Facts strip */}
+        <dl className="mt-10 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/15 bg-white/15 backdrop-blur lg:grid-cols-4">
+          {facts.map(({ icon: Icon, value, label }) => (
+            <div key={label} className="flex items-center gap-3 bg-emerald-950/70 px-4 py-4 sm:px-5">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-400/15 text-amber-300">
+                <Icon className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <div className="min-w-0">
+                <dt className="sr-only">{label}</dt>
+                <dd className="text-lg font-extrabold leading-none text-white sm:text-xl">{value}</dd>
+                <p className="mt-1 truncate text-[11px] font-semibold uppercase tracking-wider text-emerald-200/80">{label}</p>
+              </div>
+            </div>
+          ))}
+        </dl>
       </div>
     </section>
   );
