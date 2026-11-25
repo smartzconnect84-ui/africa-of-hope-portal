@@ -273,27 +273,27 @@ export default function HeroSlider({ onOpenApply, onEnterPortal }: HeroSliderPro
               </AnimatePresence>
             </div>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            <div className="mt-8 flex flex-row flex-nowrap items-center gap-1.5 sm:gap-3">
               <button
                 type="button"
                 onClick={onOpenApply}
-                className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-amber-400 px-7 text-base font-extrabold text-emerald-950 shadow-[0_18px_40px_-12px_rgba(251,191,36,0.7)] transition hover:bg-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-950 active:scale-[0.98] sm:w-auto"
+                className="group inline-flex h-10 min-w-0 shrink items-center justify-center gap-1 whitespace-nowrap rounded-full bg-amber-400 px-3 text-xs font-extrabold sm:h-12 sm:gap-2 sm:px-7 sm:text-base text-emerald-950 shadow-[0_18px_40px_-12px_rgba(251,191,36,0.7)] transition hover:bg-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-950 active:scale-[0.98]"
               >
                 {applyLabel}
-                <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
+                <ArrowRight className="hidden h-5 w-5 transition sm:block-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
               </button>
               <a
                 href="#programmes"
-                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 px-7 text-base font-bold text-white backdrop-blur transition hover:bg-white/20 active:scale-[0.98] sm:w-auto"
+                className="inline-flex h-10 min-w-0 shrink items-center justify-center gap-1 whitespace-nowrap rounded-full border border-white/30 bg-white/10 px-3 text-xs font-bold text-white backdrop-blur transition hover:bg-white/20 active:scale-[0.98] sm:h-12 sm:gap-2 sm:px-7 sm:text-base"
               >
                 Explore programmes
-                <ArrowUpRight className="h-5 w-5" aria-hidden="true" />
+                <ArrowUpRight className="hidden h-5 w-5 sm:block" aria-hidden="true" />
               </a>
               <a
                 href="/donate"
-                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full px-4 text-base font-bold text-amber-300 underline-offset-4 transition hover:text-amber-200 hover:underline sm:w-auto"
+                className="inline-flex h-10 min-w-0 shrink items-center justify-center gap-1 whitespace-nowrap rounded-full px-2 text-xs font-bold text-amber-300 underline-offset-4 transition hover:text-amber-200 hover:underline sm:h-12 sm:gap-2 sm:px-4 sm:text-base"
               >
-                <HeartHandshake className="h-5 w-5" aria-hidden="true" />
+                <HeartHandshake className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
                 {donateLabel}
               </a>
             </div>
