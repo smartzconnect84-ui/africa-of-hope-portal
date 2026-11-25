@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { Suspense, lazy, useState, type ReactNode } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -41,59 +41,57 @@ import { useApp } from "./context/AppContext";
 import { usePermissions, type PermissionsApi } from "./hooks/usePermission";
 import type { PermissionKey } from "./lib/permissions";
 import type { Role, User } from "./types";
-import {
-  AdminDashboard,
-  ProgramBuilder,
-  CohortCoordinator,
-  TeacherDashboard,
-  AttendanceSheet,
-  GradeEvaluation,
-} from "./components/AdminTeacherViews";
-import {
-  StudentPortal,
-  StudentAssignments,
-  FeeRegister,
-} from "./components/StudentFinancialViews";
-import { CertificateStudio, VerificationPortal } from "./components/CertificateVerification";
-import AdminOpportunities from "./components/AdminOpportunities";
-import SelfPacedLearning from "./components/SelfPacedLearning";
-import NotificationPreferences from "./components/notifications/NotificationPreferences";
-import NotificationAdmin from "./components/notifications/NotificationAdmin";
-import MyStudyMaterials from "./components/MyStudyMaterials";
-import AdminSystemSettings from "./components/AdminSystemSettings";
-import AdminWebsiteSettings from "./components/AdminWebsiteSettings";
-import ProfilePage from "./components/ProfilePage";
-import RolesPermissions from "./components/RolesPermissions";
-import PeopleManagement from "./components/PeopleManagement";
-import QuizBuilder from "./components/quiz/QuizBuilder";
-import StudentQuizzes from "./components/quiz/StudentQuizzes";
-import AcademicPlanning from "./components/AcademicPlanning";
-import AnnouncementManager from "./components/AnnouncementManager";
-import MessagingWorkspace from "./components/messaging/MessagingWorkspace";
-import BlogManager from "./components/portal/BlogManager";
-import SchoolPolicies from "./components/policies/SchoolPolicies";
-import RecommendedTraining from "./components/portal/RecommendedTraining";
-import StudentPayments from "./components/portal/StudentPayments";
-import PaymentsReview from "./components/portal/PaymentsReview";
-import EmailOutboxPanel from "./components/portal/EmailOutboxPanel";
-import EngagementInbox from "./components/portal/EngagementInbox";
-import OperationsHub from "./components/OperationsHub";
-import CoursePlayer from "./components/academic/CoursePlayer";
-import StudentCalendar from "./components/academic/StudentCalendar";
-import StudyPlanner from "./components/academic/StudyPlanner";
-import AssignmentInbox from "./components/academic/AssignmentInbox";
-import CompletionCertificates from "./components/academic/CompletionCertificates";
-import TeacherInsights from "./components/academic/TeacherInsights";
-import TransparencyLibrary from "./components/public/TransparencyLibrary";
-import Helpdesk from "./components/portal/Helpdesk";
-import GradeAppeals from "./components/portal/GradeAppeals";
-import TermReportCards from "./components/academic/TermReportCards";
-import CohortTimetable from "./components/academic/CohortTimetable";
-import ReferenceLetters from "./components/portal/ReferenceLetters";
-import EntranceTest from "./components/portal/EntranceTest";
-import EntranceTestAdmin from "./components/admin/EntranceTestAdmin";
-import EntrancePrepPack from "./components/public/EntrancePrepPack";
-import DonatePage from "./components/public/DonatePage";
+
+const AdminDashboard = lazy(() => import("./components/AdminTeacherViews").then((m) => ({ default: m.AdminDashboard })));
+const ProgramBuilder = lazy(() => import("./components/AdminTeacherViews").then((m) => ({ default: m.ProgramBuilder })));
+const CohortCoordinator = lazy(() => import("./components/AdminTeacherViews").then((m) => ({ default: m.CohortCoordinator })));
+const TeacherDashboard = lazy(() => import("./components/AdminTeacherViews").then((m) => ({ default: m.TeacherDashboard })));
+const AttendanceSheet = lazy(() => import("./components/AdminTeacherViews").then((m) => ({ default: m.AttendanceSheet })));
+const GradeEvaluation = lazy(() => import("./components/AdminTeacherViews").then((m) => ({ default: m.GradeEvaluation })));
+const StudentPortal = lazy(() => import("./components/StudentFinancialViews").then((m) => ({ default: m.StudentPortal })));
+const StudentAssignments = lazy(() => import("./components/StudentFinancialViews").then((m) => ({ default: m.StudentAssignments })));
+const FeeRegister = lazy(() => import("./components/StudentFinancialViews").then((m) => ({ default: m.FeeRegister })));
+const CertificateStudio = lazy(() => import("./components/CertificateVerification").then((m) => ({ default: m.CertificateStudio })));
+const VerificationPortal = lazy(() => import("./components/CertificateVerification").then((m) => ({ default: m.VerificationPortal })));
+const AdminOpportunities = lazy(() => import("./components/AdminOpportunities"));
+const SelfPacedLearning = lazy(() => import("./components/SelfPacedLearning"));
+const NotificationPreferences = lazy(() => import("./components/notifications/NotificationPreferences"));
+const NotificationAdmin = lazy(() => import("./components/notifications/NotificationAdmin"));
+const MyStudyMaterials = lazy(() => import("./components/MyStudyMaterials"));
+const AdminSystemSettings = lazy(() => import("./components/AdminSystemSettings"));
+const AdminWebsiteSettings = lazy(() => import("./components/AdminWebsiteSettings"));
+const ProfilePage = lazy(() => import("./components/ProfilePage"));
+const RolesPermissions = lazy(() => import("./components/RolesPermissions"));
+const PeopleManagement = lazy(() => import("./components/PeopleManagement"));
+const QuizBuilder = lazy(() => import("./components/quiz/QuizBuilder"));
+const StudentQuizzes = lazy(() => import("./components/quiz/StudentQuizzes"));
+const AcademicPlanning = lazy(() => import("./components/AcademicPlanning"));
+const AnnouncementManager = lazy(() => import("./components/AnnouncementManager"));
+const MessagingWorkspace = lazy(() => import("./components/messaging/MessagingWorkspace"));
+const BlogManager = lazy(() => import("./components/portal/BlogManager"));
+const SchoolPolicies = lazy(() => import("./components/policies/SchoolPolicies"));
+const RecommendedTraining = lazy(() => import("./components/portal/RecommendedTraining"));
+const StudentPayments = lazy(() => import("./components/portal/StudentPayments"));
+const PaymentsReview = lazy(() => import("./components/portal/PaymentsReview"));
+const EmailOutboxPanel = lazy(() => import("./components/portal/EmailOutboxPanel"));
+const EngagementInbox = lazy(() => import("./components/portal/EngagementInbox"));
+const OperationsHub = lazy(() => import("./components/OperationsHub"));
+const CoursePlayer = lazy(() => import("./components/academic/CoursePlayer"));
+const StudentCalendar = lazy(() => import("./components/academic/StudentCalendar"));
+const StudyPlanner = lazy(() => import("./components/academic/StudyPlanner"));
+const AssignmentInbox = lazy(() => import("./components/academic/AssignmentInbox"));
+const CompletionCertificates = lazy(() => import("./components/academic/CompletionCertificates"));
+const TeacherInsights = lazy(() => import("./components/academic/TeacherInsights"));
+const TransparencyLibrary = lazy(() => import("./components/public/TransparencyLibrary"));
+const Helpdesk = lazy(() => import("./components/portal/Helpdesk"));
+const GradeAppeals = lazy(() => import("./components/portal/GradeAppeals"));
+const TermReportCards = lazy(() => import("./components/academic/TermReportCards"));
+const CohortTimetable = lazy(() => import("./components/academic/CohortTimetable"));
+const ReferenceLetters = lazy(() => import("./components/portal/ReferenceLetters"));
+const EntranceTest = lazy(() => import("./components/portal/EntranceTest"));
+const EntranceTestAdmin = lazy(() => import("./components/admin/EntranceTestAdmin"));
+const EntrancePrepPack = lazy(() => import("./components/public/EntrancePrepPack"));
+const DonatePage = lazy(() => import("./components/public/DonatePage"));
 
 /** Everything a view's `visible`/`render` function needs, computed once per render. */
 export interface PortalViewContext extends PermissionsApi {

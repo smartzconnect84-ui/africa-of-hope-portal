@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
-  AlertTriangle, Bell, ChevronDown, LogOut, Menu, Search, X,
+  AlertTriangle, ChevronDown, LogOut, Menu, Search, X,
   RefreshCw, Globe, Megaphone, Sparkles, type LucideIcon,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
@@ -418,12 +418,6 @@ export default function Navigation({
     if (bannerRef.current) observer.observe(bannerRef.current);
     return () => observer.disconnect();
   }, [bannerVisible]);
-  const bellCount = useMemo(() => {
-    const now = Date.now();
-    const role = currentUser?.role ?? "Student";
-    return state.announcements.filter((item) => isAnnouncementLiveFor(item, role, now)).length;
-  }, [state.announcements, currentUser?.role]);
-
   const { t } = useLocale();
 
   const { setHidden: hideAssistant } = useAssistantVisibility();
@@ -692,42 +686,6 @@ export default function Navigation({
                 <Globe className="h-4 w-4" /> Website
               </button>
             )}
-            <Pop
-              trigger={
-                <span className="relative grid h-10 w-10 place-items-center rounded-xl text-white transition hover:bg-white/10" role="img" aria-label={bellCount > 0 ? `Bulletin board, ${bellCount} new notices` : "Bulletin board"}>
-                  <Bell className="h-5 w-5" />
-                  {bellCount > 0 && (
-                    <span className="absolute -right-0.5 -top-0.5 grid h-5 min-w-[20px] place-items-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white ring-2 ring-white">
-                      {bellCount > 9 ? "9+" : bellCount}
-                    </span>
-                  )}
-                </span>
-              }
-            >
-              {(close) => (
-                <div className="p-1">
-                  <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Bulletins
-                  </p>
-                  {state.announcements.slice(0, 4).map((a) => (
-                    <button
-                      key={a.id}
-                      type="button"
-                      onClick={() => {
-                        close();
-                        go("announcements");
-                      }}
-                      className="block w-full rounded-xl px-3 py-2 text-left hover:bg-emerald-50"
-                    >
-                      <span className="block text-sm font-medium text-slate-800">{a.title}</span>
-                      <span className="mt-0.5 block text-[11px] text-slate-500">
-                        {a.category} / {a.date}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </Pop>
 
             <button
               type="button"

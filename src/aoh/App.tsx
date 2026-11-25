@@ -14,7 +14,7 @@ import { useVisiblePortalViews, getPortalView, PORTAL_VIEWS, PORTAL_NAV_GROUPS }
 // they are always executed regardless of which branch renders.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
 const _aohPortalViewsLive = PORTAL_VIEWS.length + PORTAL_NAV_GROUPS.length;
-import PublicMarketingSite from "./components/PublicMarketingSite";
+const PublicMarketingSite = lazy(() => import("./components/PublicMarketingSite"));
 import AuthPortal, { PasswordRecoveryDialog, type AuthTab } from "./components/AuthPortal";
 import OfflineBanner from "./components/pwa/OfflineBanner";
 import LivePushHost from "./components/LivePushHost";
@@ -156,7 +156,9 @@ function Portal({ onExitToPublic, initialTab }: { onExitToPublic: () => void; in
     <Navigation view={activeKey} onNavigate={setView} onExitToPublic={onExitToPublic}>
       <div key={currentUser.id}>
         {activeKey !== "announcements" && <PortalAnnouncementTicker onOpen={() => setView("announcements")} />}
-        {activeView?.render(ctx)}
+        <Suspense fallback={<div className="grid min-h-[40vh] place-items-center" role="status" aria-label="Loading"><span className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-200 border-t-emerald-700" /></div>}>
+          {activeView?.render(ctx)}
+        </Suspense>
       </div>
     </Navigation>
     </KnockProviderShell>
@@ -242,12 +244,14 @@ function Shell() {
   return (
     <>
       {site === "public" ? (
+        <Suspense fallback={<div className="min-h-[100dvh] bg-white" />}>
         <PublicMarketingSite
           onEnterPortal={(tab?: AuthTab) => {
             setAuthTab(tab ?? "signin");
             setSite("portal");
           }}
         />
+        </Suspense>
       ) : (
         <Portal onExitToPublic={() => setSite("public")} initialTab={authTab} />
       )}
