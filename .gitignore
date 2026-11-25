@@ -21,3 +21,19 @@ supabase
 
 # Supabase local cache (managed by Swarmz Cloud)
 supabase/
+
+.swarmz
+node_modules
+.env
+.env.*
+!.env.example
+dist
+build
+.next
+.vite
+.turbo
+.DS_Store
+*.log
+coverage
+.cache
+
