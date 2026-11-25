@@ -18,3 +18,6 @@ dist
 supabase
 .swarmz-restore-failed
 /.swarmz
+
+# Supabase local cache (managed by Swarmz Cloud)
+supabase/
