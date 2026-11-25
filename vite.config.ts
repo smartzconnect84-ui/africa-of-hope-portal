@@ -157,6 +157,9 @@ export default defineConfig({
       "clsx",
       "tailwind-merge",
       "@supabase/supabase-js",
+      "react-markdown",
+      "swr",
+      "react-router",
     ],
   },
   server: {

@@ -21,8 +21,8 @@ export type SiteMeta = {
 };
 
 export const site: SiteMeta = {
-  title: "Your App",
-  description: "A brand-new app, ready to build.",
+  title: "AFRICA OF HOPE SCHOOL OF PROFESSIONAL STUDIES",
+  description: "Practical certificate programmes with mentors and verifiable certificates in Liberia.",
   brandSuffix: "—",
 };
 
