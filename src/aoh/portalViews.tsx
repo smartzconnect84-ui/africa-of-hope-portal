@@ -56,6 +56,8 @@ import {
 } from "./components/StudentFinancialViews";
 import { CertificateStudio, VerificationPortal } from "./components/CertificateVerification";
 import AdminOpportunities from "./components/AdminOpportunities";
+import SelfPacedLearning from "./components/SelfPacedLearning";
+import MyStudyMaterials from "./components/MyStudyMaterials";
 import AdminSystemSettings from "./components/AdminSystemSettings";
 import AdminWebsiteSettings from "./components/AdminWebsiteSettings";
 import ProfilePage from "./components/ProfilePage";
@@ -301,6 +303,20 @@ export const PORTAL_VIEWS: PortalView[] = [
     icon: CalendarRange,
     visible: (ctx) => ctx.role === "Student",
     render: () => <StudyPlanner />,
+  },
+  {
+    key: "self-paced",
+    label: "Self-Paced Learning",
+    icon: GraduationCap,
+    visible: () => true,
+    render: () => <SelfPacedLearning />,
+  },
+  {
+    key: "study-materials",
+    label: "Study Materials",
+    icon: LibraryBig,
+    visible: (ctx) => ctx.role === "Student",
+    render: () => <MyStudyMaterials />,
   },
   {
     key: "quizzes",
@@ -577,6 +593,8 @@ export const PORTAL_NAV_GROUPS: { id: string; label: string; keys: string[] }[] 
       "academic-planning",
       "study-plan",
       "study-calendar",
+      "self-paced",
+      "study-materials",
       "assignments",
       "quizzes",
       "training-library",
