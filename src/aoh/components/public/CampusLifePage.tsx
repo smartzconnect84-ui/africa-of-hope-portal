@@ -37,7 +37,7 @@ function Gallery() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {photos.map((photo) => (
             <figure key={photo.id} className="overflow-hidden rounded-2xl border border-emerald-950/10 bg-white shadow-sm">
-              <img src={photo.src} alt={photo.caption || "Africa of Hope campus"} loading="lazy" className="aspect-[4/3] w-full object-cover" />
+              <img src={photo.src} alt={photo.caption || "Africa of Hope campus"} loading="lazy" onError={(e) => { e.currentTarget.closest("figure")?.setAttribute("hidden", ""); }} className="aspect-[4/3] w-full object-cover" />
               <figcaption className="p-4">
                 {photo.tag ? <span className="text-xs font-semibold uppercase tracking-wide text-emerald-700">{photo.tag}</span> : null}
                 <p className="mt-1 text-sm font-medium text-slate-800">{photo.caption}</p>
@@ -300,7 +300,7 @@ export function CampusLifePreview() {
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {photos.map((photo) => (
               <figure key={photo.id} className="overflow-hidden rounded-2xl border border-emerald-950/10 bg-white shadow-sm">
-                <img src={photo.image} alt={photo.caption} loading="lazy" className="aspect-[4/3] w-full object-cover" />
+                <img src={photo.image} alt={photo.caption} loading="lazy" onError={(e) => { e.currentTarget.closest("figure")?.setAttribute("hidden", ""); }} className="aspect-[4/3] w-full object-cover" />
                 <figcaption className="p-4 text-sm font-medium text-emerald-950">{photo.caption}</figcaption>
               </figure>
             ))}

@@ -20,6 +20,7 @@ export default function AboutSection({
               <img
                 src={copy.image}
                 alt="Africa of Hope community"
+                onError={(e) => { const box = e.currentTarget.closest("div.relative"); if (box) (box as HTMLElement).style.display = "none"; }}
                 className="aoh-photo h-80 w-full rounded-3xl object-cover object-center shadow-lg shadow-emerald-900/10 sm:h-[28rem]"
               />
               {w.partners.length > 0 && <div className="aoh-card aoh-glass absolute -bottom-5 left-5 rounded-2xl p-4">

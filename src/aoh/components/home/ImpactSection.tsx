@@ -24,7 +24,7 @@ export default function ImpactSection({ copy, w }: { copy: SectionCopy; w: Websi
         {copy.image && <Reveal delay={0.05} className="mt-8">
           <figure className="aoh-card grid overflow-hidden rounded-3xl bg-emerald-900/40 md:grid-cols-[1.15fr_0.85fr]">
             <div className="min-w-0 bg-emerald-900">
-              <img src={copy.image} alt="Africa of Hope learning community" loading="lazy" decoding="async" className="aspect-[4/3] h-full max-h-[34rem] w-full object-cover object-[center_30%] sm:aspect-[16/10] md:aspect-[4/3]" />
+              <img src={copy.image} alt="Africa of Hope learning community" onError={(e) => { const f = e.currentTarget.closest("figure"); if (f) (f as HTMLElement).style.display = "none"; }} loading="lazy" decoding="async" className="aspect-[4/3] h-full max-h-[34rem] w-full object-cover object-[center_30%] sm:aspect-[16/10] md:aspect-[4/3]" />
             </div>
             <figcaption className="flex min-w-0 flex-col justify-center px-6 py-8 sm:p-10">
               <span className="mb-5 h-1 w-12 rounded-full bg-amber-400" aria-hidden="true" />
