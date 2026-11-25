@@ -282,17 +282,17 @@ export function CampusLifePreview() {
     .slice(0, 3);
 
   return (
-    <section className="bg-[#f6f8f7] py-8 sm:py-10" aria-labelledby="campus-life-preview-heading">
+    <section className="bg-[#f6f8f7] py-12 sm:py-12" aria-labelledby="campus-life-preview-heading">
       <div className="mx-auto max-w-6xl px-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="max-w-2xl">
+        <div className="m-2 flex flex-col gap-4 p-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="max-w-2xl p-3">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">{cms.eyebrow || "Campus life"}</p>
             <h2 id="campus-life-preview-heading" className="mt-3 text-2xl font-bold tracking-tight text-emerald-950 sm:text-3xl">
               {cms.galleryTitle || "Life at AFRICA OF HOPE"}
             </h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">{cms.subtitle || cms.body}</p>
           </div>
-          <a href="/campus-life" className="inline-flex min-h-11 items-center font-semibold text-emerald-800 underline-offset-4 hover:underline">
+          <a href="/campus-life" className="inline-flex min-h-11 items-center text-left text-[18px] font-bold text-emerald-800 underline-offset-4 hover:underline">
             Explore campus life
           </a>
         </div>

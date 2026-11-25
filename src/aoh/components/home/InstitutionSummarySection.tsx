@@ -23,7 +23,9 @@ export default function InstitutionSummarySection({
   const headline = summary || who;
   void settings;
   const mission = ABOUT_MISSION.find((m) => m.id === "mission");
-  const paragraphs = cleanAboutParagraphs(headline?.body || "").slice(0, 2);
+  const paragraphs = cleanAboutParagraphs(headline?.body || "")
+    .filter((paragraph) => !paragraph.startsWith("We believe every person deserves dignity"))
+    .slice(0, 2);
   const cards = [
     { icon: TrendingUp, eyebrow: mission?.eyebrow || "Our mission", title: "Heal · Educate · Empower", body: mission?.body?.[0] || "" },
   ];

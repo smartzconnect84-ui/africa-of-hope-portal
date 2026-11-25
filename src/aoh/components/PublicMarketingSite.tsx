@@ -616,7 +616,7 @@ export default function PublicMarketingSite({ onEnterPortal }: { onEnterPortal: 
                 </div>
               </HomeSectionFrame>
               {w.team.enabled && (
-                <section key="team" id="staff" className="scroll-mt-24 py-10 sm:py-12">
+                <section key="team" id="staff" className="scroll-mt-24 py-12 sm:py-12">
                   <div className="mx-auto max-w-6xl px-4">
                     <h2 className="text-3xl font-bold text-emerald-950">{w.team.title}</h2>
                     <p className="mt-3 text-black">{w.team.description}</p>

@@ -107,7 +107,7 @@ export default function PartnerShowcase({ w }: { w: WebsiteSettings }) {
     >
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="max-w-2xl">
-          <h3 className="flex items-center gap-2 text-lg font-semibold text-amber-200">
+          <h3 className="flex items-center gap-2 text-lg font-semibold text-background">
             <Briefcase className="h-5 w-5 shrink-0" aria-hidden="true" />
             {config?.title || 'Industry and partnerships'}
           </h3>
