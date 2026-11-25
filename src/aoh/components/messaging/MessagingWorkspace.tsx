@@ -12,6 +12,7 @@ import {
   type Message,
 } from "@/aoh/lib/messaging";
 import UserAvatar from "@/aoh/components/UserAvatar";
+import { useNavSlot } from "@/aoh/lib/navHistory";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/aoh/components/ui/dialog";
 import ChatList from "./ChatList";
 import ConversationPane from "./ConversationPane";
@@ -71,6 +72,8 @@ export default function MessagingWorkspace() {
   const { onlineIds } = usePresence(meId || null);
 
   const [activeKey, setActiveKey] = useState<string | null>(null);
+  // Back from an open conversation returns to the conversation list.
+  useNavSlot("messagesChat", activeKey ?? "", (value) => setActiveKey(value || null));
   const [pending, setPending] = useState<Conversation | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
   const [dialog, setDialog] = useState<{ open: boolean; mode: "direct" | "group" }>({ open: false, mode: "direct" });

@@ -14,6 +14,7 @@ import { cn } from "@/aoh/lib/utils";
 import { INPUT_CLASS, newPasswordErrors } from "@/aoh/lib/forms";
 import { remembersSession, setRememberSession } from "@/aoh/lib/authStorage";
 import { consumePendingProgramApply } from "@/aoh/lib/programApply";
+import { useNavSlot } from "@/aoh/lib/navHistory";
 import { VerificationPortal } from "./CertificateVerification";
 import { resolveIcon } from "./home/icons";
 import BrandLockup from "./brand/BrandLockup";
@@ -449,6 +450,8 @@ function RegisterForm({ onDone }: { onDone: (email: string, status: DoneStatus) 
   const { state, signUpStudent } = useApp();
   const [remember, setRemember] = useState(remembersSession);
   const [step, setStep] = useState(0);
+  // Back moves to the previous registration step; entered details stay in place.
+  useNavSlot("registerStep", String(step), (value) => setStep(Number(value) || 0));
   const [reg, setReg] = useState(emptyReg);
   const [errors, setErrors] = useState<RegErrors>({});
   const [query, setQuery] = useState("");
