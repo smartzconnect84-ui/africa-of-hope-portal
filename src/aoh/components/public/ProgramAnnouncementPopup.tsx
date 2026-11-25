@@ -195,9 +195,9 @@ export default function ProgramAnnouncementPopup({ programs, paused, onExplore, 
                     timerRef.current = window.setTimeout(maybeShow, POPUP_CONFIG.repeatDelayMs);
                     onExplore();
                   }}
-                  className="btn-sheen inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800"
+                  className="btn-sheen inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-700 px-4 text-[18px] font-semibold text-white transition hover:bg-emerald-800"
                 >
-                  {t("Explore Programs")} <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  {t("Programs")} <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </button>
                 <button
                   type="button"
