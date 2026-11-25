@@ -226,9 +226,9 @@ export default function HeroSlider({ onOpenApply, onEnterPortal }: HeroSliderPro
             </div>
           );
         })}
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-950 via-emerald-950/85 to-emerald-950/25" />
-        <div className="absolute inset-0 bg-gradient-to-t from-emerald-950 via-transparent to-emerald-950/40" />
-        <div className="absolute -left-24 bottom-0 h-[26rem] w-[26rem] rounded-full bg-amber-400/20 blur-3xl" />
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/85 via-emerald-950/35 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/70 via-transparent to-transparent" />
+        <div className="absolute -left-24 bottom-0 h-[26rem] w-[26rem] rounded-full bg-amber-400/10 blur-3xl" />
         <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-amber-400 via-emerald-400 to-amber-400" />
       </div>
 
@@ -328,7 +328,7 @@ export default function HeroSlider({ onOpenApply, onEnterPortal }: HeroSliderPro
                     )}
                   />
                 ))}
-                <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/80 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/55 via-transparent to-transparent" />
                 <div className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-2">
                   <p className="min-w-0 truncate text-xs font-bold text-white">
                     <span className="mr-2 tabular-nums text-amber-300">
