@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, useSyncExternalStore } 
 import type Knock from "@knocklabs/client";
 import { useApp } from "@/aoh/context/AppContext";
 import { getKnockClient, isKnockConfigured, KNOCK_FEED_CHANNEL_ID, resetKnockClient } from "@/aoh/lib/knock";
-import { syncKnockUser } from "@/aoh/lib/notifications";
+import { getKnockUserToken, syncKnockUser } from "@/aoh/lib/notifications";
 import KnockLiveSync from "@/aoh/components/notifications/KnockLiveSync";
 
 type Feed = ReturnType<Knock["feeds"]["initialize"]>;
@@ -35,17 +35,24 @@ export default function KnockProviderShell({ children }: { children: React.React
   // a torn-down feed is never reused, and a late network failure never crashes the page.
   useEffect(() => {
     if (!id || !isKnockConfigured()) { setValue(null); return; }
-    const knock = getKnockClient(id);
-    if (!knock) { setValue(null); return; }
-    const feed = knock.feeds.initialize(KNOCK_FEED_CHANNEL_ID);
-    try {
-      feed.listenForUpdates();
-      void Promise.resolve(feed.fetch()).catch(() => undefined);
-    } catch { /* feed stays empty; the bell shows no items */ }
-    setValue({ knock, feed });
+    let cancelled = false;
+    let feed: Ctx["feed"] | null = null;
+    void (async () => {
+      const token = await getKnockUserToken();
+      if (cancelled) return;
+      const knock = getKnockClient(id, token, getKnockUserToken);
+      if (!knock) return;
+      feed = knock.feeds.initialize(KNOCK_FEED_CHANNEL_ID);
+      try {
+        feed.listenForUpdates();
+        void Promise.resolve(feed.fetch()).catch(() => undefined);
+      } catch { /* feed stays empty; the bell shows no items */ }
+      setValue({ knock, feed });
+    })();
     return () => {
+      cancelled = true;
       setValue(null);
-      try { feed.teardown(); } catch { /* already closed */ }
+      try { feed?.teardown(); } catch { /* already closed */ }
     };
   }, [id]);
 

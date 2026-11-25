@@ -64,3 +64,9 @@ export const setNotificationProvider = (provider: "knock" | "onesignal", confirm
 export const sendTestNotification = () => call<NotifyResult>({ action: "test" });
 export const setupKnockWorkflow = (environment = "development") =>
   call<{ channel?: string; environment?: string }>({ action: "setup_knock", environment });
+
+/** Signed Knock user token (needed when Knock enhanced security is on). */
+export async function getKnockUserToken(): Promise<string | null> {
+  const res = await call<{ token?: string }>({ action: "knock_token" });
+  return res.ok && res.token ? res.token : null;
+}

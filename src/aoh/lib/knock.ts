@@ -12,12 +12,18 @@ let client: Knock | null = null;
 let clientUser = "";
 
 /** One Knock client per signed-in user; switching user tears the old one down. */
-export function getKnockClient(userId: string): Knock | null {
+export function getKnockClient(
+  userId: string,
+  token?: string | null,
+  refreshToken?: () => Promise<string | null>,
+): Knock | null {
   if (!isKnockConfigured() || !userId || typeof window === "undefined") return null;
   if (client && clientUser === userId) return client;
   client?.teardown();
   client = new Knock(KNOCK_PUBLIC_API_KEY);
-  client.authenticate(userId);
+  client.authenticate(userId, token ?? undefined, refreshToken
+    ? { onUserTokenExpiring: async () => (await refreshToken()) ?? token ?? undefined, timeBeforeExpirationInMs: 120000 }
+    : undefined);
   clientUser = userId;
   return client;
 }
