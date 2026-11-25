@@ -1,22 +1,29 @@
 import Knock from "@knocklabs/client";
 
-export const KNOCK_PUBLIC_API_KEY = (import.meta.env.VITE_KNOCK_PUBLIC_API_KEY as string | undefined)?.trim() || "";
-export const KNOCK_FEED_CHANNEL_ID = (import.meta.env.VITE_KNOCK_FEED_CHANNEL_ID as string | undefined)?.trim() || "";
+// Public identifiers only (safe in the browser). The secret key stays on the server.
+export const KNOCK_PUBLIC_API_KEY = (import.meta.env.VITE_KNOCK_PUBLIC_API_KEY as string | undefined)?.trim() || "pk_fgs_fDXGlYlbFnTgKObJ1Xj9rALk6F8a3ZSxBOmDgx0";
+export const KNOCK_FEED_CHANNEL_ID = (import.meta.env.VITE_KNOCK_FEED_CHANNEL_ID as string | undefined)?.trim() || "7fd6d7e6-bf65-4987-af01-b6035e4c033f";
 
 export function isKnockConfigured(): boolean {
   return Boolean(KNOCK_PUBLIC_API_KEY && KNOCK_FEED_CHANNEL_ID);
 }
 
 let client: Knock | null = null;
+let clientUser = "";
 
-export function getKnockClient(userId: string, userToken?: string): Knock | null {
-  if (!isKnockConfigured() || !userId) return null;
-  if (client) return client;
+/** One Knock client per signed-in user; switching user tears the old one down. */
+export function getKnockClient(userId: string): Knock | null {
+  if (!isKnockConfigured() || !userId || typeof window === "undefined") return null;
+  if (client && clientUser === userId) return client;
+  client?.teardown();
   client = new Knock(KNOCK_PUBLIC_API_KEY);
-  client.authenticate(userId, userToken);
+  client.authenticate(userId);
+  clientUser = userId;
   return client;
 }
 
 export function resetKnockClient() {
+  client?.teardown();
   client = null;
+  clientUser = "";
 }

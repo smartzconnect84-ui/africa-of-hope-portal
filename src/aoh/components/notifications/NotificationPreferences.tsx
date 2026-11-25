@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { BellRing } from "lucide-react";
 import { toast } from "sonner";
-import { useKnockClient } from "@knocklabs/react";
+import { useKnock } from "./KnockProviderShell";
 import { isKnockConfigured } from "@/aoh/lib/knock";
 import { Switch } from "@/aoh/components/ui/switch";
 import { panelClass, SectionHeader } from "../Navigation";
@@ -23,7 +23,8 @@ const CATEGORIES = [
 type Prefs = { channel_types?: Record<string, boolean>; categories?: Record<string, boolean | { channel_types?: Record<string, boolean> }> };
 
 function Body() {
-  const knock = useKnockClient();
+  const ctx = useKnock();
+  const knock = ctx!.knock;
   const [prefs, setPrefs] = useState<Prefs>({});
   const [loading, setLoading] = useState(true);
 
@@ -101,10 +102,11 @@ function Body() {
 }
 
 export default function NotificationPreferences() {
+  const available = isKnockConfigured() && Boolean(useKnock());
   return (
     <div className="space-y-5">
       <SectionHeader title="Notification settings" subtitle="Choose how and when the school contacts you." />
-      {isKnockConfigured() ? (
+      {available ? (
         <Body />
       ) : (
         <div className={`${panelClass} flex items-start gap-3 p-5 text-sm text-slate-600`}>
