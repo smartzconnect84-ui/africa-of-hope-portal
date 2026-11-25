@@ -1089,3 +1089,44 @@ html .aoh-public .aoh-hero-v2 h1 { color: #ffffff !important; }
 /* Token text colours that must win over the global heading colour rule. */
 html .aoh-public .aoh-text-bg.aoh-text-bg { color: var(--background) !important; }
 html .aoh-public .aoh-text-secondary.aoh-text-secondary { color: var(--secondary) !important; }
+
+/* ---- Public site: animated buttons and page entrances ---- */
+.aoh-public :is(button, a[href], [role="button"]):not(:disabled) {
+  transition: transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s ease, background-color .25s ease, color .2s ease, border-color .25s ease, filter .25s ease;
+}
+.aoh-public :is(button, [role="button"], a.rounded-full, a[class*="rounded-xl"][class*="bg-"], a[class*="rounded-lg"][class*="bg-"]):not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px -10px rgba(6, 78, 59, .45);
+  filter: brightness(1.04);
+}
+.aoh-public :is(button, [role="button"], a.rounded-full, a[class*="rounded-xl"][class*="bg-"], a[class*="rounded-lg"][class*="bg-"]):not(:disabled):active {
+  transform: translateY(0) scale(.96);
+  box-shadow: none;
+  transition-duration: .08s;
+}
+.aoh-public :is(button, a[href]):focus-visible {
+  outline: 3px solid rgba(251, 191, 36, .85);
+  outline-offset: 3px;
+}
+.aoh-public button svg, .aoh-public a.rounded-full svg { transition: transform .25s ease; }
+.aoh-public button:hover svg:not(.animate-spin), .aoh-public a.rounded-full:hover svg { transform: translateX(2px); }
+
+@keyframes aoh-page-in {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+.aoh-public main > *, .aoh-public section {
+  animation: aoh-page-in .6s cubic-bezier(.22,1,.36,1) both;
+}
+.aoh-public .grid > * { animation: aoh-page-in .55s cubic-bezier(.22,1,.36,1) both; }
+.aoh-public .grid > *:nth-child(2) { animation-delay: .06s; }
+.aoh-public .grid > *:nth-child(3) { animation-delay: .12s; }
+.aoh-public .grid > *:nth-child(4) { animation-delay: .18s; }
+.aoh-public .grid > *:nth-child(n+5) { animation-delay: .24s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .aoh-public *, .aoh-public *::before, .aoh-public *::after {
+    animation: none !important;
+    transition-duration: .01ms !important;
+  }
+}
