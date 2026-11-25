@@ -1,48 +1,33 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { KnockProvider, KnockFeedProvider } from "@knocklabs/react";
 import { useApp } from "@/aoh/context/AppContext";
-import { isKnockConfigured } from "@/aoh/lib/knock";
+import { isKnockConfigured, KNOCK_PUBLIC_API_KEY, KNOCK_FEED_CHANNEL_ID } from "@/aoh/lib/knock";
+import { syncKnockUser } from "@/aoh/lib/notifications";
 import KnockLiveSync from "@/aoh/components/notifications/KnockLiveSync";
-import { supabase, edgeUrl } from "@/aoh/lib/supabase";
 
+/**
+ * Connects the signed-in Supabase user (stable UUID) to Knock's in-app feed and
+ * keeps their Knock profile (name, email, role) in sync through the server.
+ */
 export default function KnockProviderShell({ children }: { children: React.ReactNode }) {
   const { currentUser } = useApp();
-  const [userToken, setUserToken] = useState<string | undefined>(undefined);
+  const id = currentUser?.id;
+  const signature = `${id}|${currentUser?.name}|${currentUser?.email}|${currentUser?.role}|${currentUser?.status}`;
 
   useEffect(() => {
-    if (!isKnockConfigured() || !currentUser?.id) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const token = session?.access_token;
-        const res = await fetch(edgeUrl("knock-user-token"), {
-          method: "GET",
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-        });
-        if (res.ok) {
-          const json = await res.json();
-          if (!cancelled && json?.token) setUserToken(json.token);
-        }
-      } catch {
-        /* fall back to public identification */
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [currentUser?.id]);
+    if (!isKnockConfigured() || !id) return;
+    void syncKnockUser();
+  }, [id, signature]);
 
   if (!isKnockConfigured() || !currentUser?.id) return <>{children}</>;
 
   return (
     <KnockProvider
-      apiKey={import.meta.env.VITE_KNOCK_PUBLIC_API_KEY as string}
+      apiKey={KNOCK_PUBLIC_API_KEY}
       user={{ id: currentUser.id, name: currentUser.name, email: currentUser.email, avatar: currentUser.avatarUrl }}
-      userToken={userToken}
       enabled
     >
-      <KnockFeedProvider feedId={import.meta.env.VITE_KNOCK_FEED_CHANNEL_ID as string}>
+      <KnockFeedProvider feedId={KNOCK_FEED_CHANNEL_ID}>
         <KnockLiveSync />
         {children}
       </KnockFeedProvider>

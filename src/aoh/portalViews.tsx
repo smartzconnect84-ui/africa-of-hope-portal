@@ -57,6 +57,8 @@ import {
 import { CertificateStudio, VerificationPortal } from "./components/CertificateVerification";
 import AdminOpportunities from "./components/AdminOpportunities";
 import SelfPacedLearning from "./components/SelfPacedLearning";
+import NotificationPreferences from "./components/notifications/NotificationPreferences";
+import NotificationAdmin from "./components/notifications/NotificationAdmin";
 import MyStudyMaterials from "./components/MyStudyMaterials";
 import AdminSystemSettings from "./components/AdminSystemSettings";
 import AdminWebsiteSettings from "./components/AdminWebsiteSettings";
@@ -303,6 +305,20 @@ export const PORTAL_VIEWS: PortalView[] = [
     icon: CalendarRange,
     visible: (ctx) => ctx.role === "Student",
     render: () => <StudyPlanner />,
+  },
+  {
+    key: "notification-settings",
+    label: "Notification settings",
+    icon: Mail,
+    visible: () => true,
+    render: () => <NotificationPreferences />,
+  },
+  {
+    key: "notification-admin",
+    label: "Notification centre",
+    icon: Activity,
+    visible: (ctx) => ctx.can("settings.manage"),
+    render: () => <NotificationAdmin />,
   },
   {
     key: "self-paced",
@@ -615,6 +631,6 @@ export const PORTAL_NAV_GROUPS: { id: string; label: string; keys: string[] }[] 
   {
     id: "system",
     label: "System & Resources",
-    keys: ["my-files", "operations", "website", "email-outbox", "settings", "profile"],
+    keys: ["my-files", "operations", "website", "email-outbox", "notification-admin", "settings", "notification-settings", "profile"],
   },
 ];

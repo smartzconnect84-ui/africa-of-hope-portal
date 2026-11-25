@@ -1,18 +1,10 @@
-import { createClient } from "@supabase/supabase-js";
+// Single Supabase client for the whole portal (the school's own project).
+// Re-exported so older imports keep working and never create a second client.
+import { supabase as portalClient, SUPABASE_URL } from "@/aoh/integrations/supabase/client";
 
-const url = import.meta.env.VITE_SUPABASE_URL;
-const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!url || !anonKey) {
-  throw new Error("Supabase configuration is missing. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.");
-}
-
-export const supabase = createClient(url, anonKey, {
-  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
-});
-
-export const PROJECT_URL = url;
+export const supabase = portalClient;
+export const PROJECT_URL = SUPABASE_URL;
 
 export function edgeUrl(slug) {
-  return `${url}/functions/v1/${slug}`;
+  return `${SUPABASE_URL}/functions/v1/${slug}`;
 }

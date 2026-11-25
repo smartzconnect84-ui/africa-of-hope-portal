@@ -10,6 +10,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/aoh/integrations/supabase/client";
+import { notify } from "@/aoh/lib/notifications";
 import { fetchState, mergeThemeSettings, mergeWebsiteSettings, persistSettingsPatch, settingsRow, today, uid, type Row } from "@/aoh/data/liveData";
 import type {
   Announcement,
@@ -421,6 +422,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             return { error: "Your account was created, but some application details could not be saved. Sign in and contact admissions; do not register again." };
           }
           await refresh();
+          void notify({ event: "account-registered", recipients: [data.user.id], idempotencyKey: `registered-${data.user.id}` });
           return { error: null, status: "signed_in" };
         }
         return { error: null, status: "confirm_email" };
@@ -992,6 +994,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
             author_id: currentUser?.id ?? null,
           });
           if (error) return migrationHint(error.message, "Bulletins");
+          // Tell every active member through the central notification service (deduplicated per bulletin).
+          const audience = state.users.filter((u) => u.status === "Active" && u.id !== currentUser?.id).map((u) => u.id).slice(0, 500);
+          if (audience.length && payload.status !== "draft") {
+            void notify({ event: "system-announcement", recipients: audience, data: { title: payload.title, message: payload.body.slice(0, 200) }, idempotencyKey: `announcement-${id}` });
+          }
           setState((s) => ({ ...s, announcements: [{ ...payload, id, date }, ...s.announcements] }));
           await refresh();
           return null;

@@ -8,6 +8,7 @@ import { useApp } from "../context/AppContext";
 import { isAnnouncementLiveFor } from "@/aoh/lib/announcements";
 import { cn } from "@/aoh/lib/utils";
 import PortalInbox from "./portal/PortalInbox";
+import KnockNotificationBell from "./notifications/KnockNotificationBell";
 import { portalViewLabel, PORTAL_NAV_GROUPS, PORTAL_VIEWS, usePortalViewContext } from "../portalViews";
 import { NAV_RELEVANCE_RANK } from "../portalViews";
 import { LanguageSwitcher, useLocale } from "@/aoh/lib/locale";
@@ -680,6 +681,7 @@ export default function Navigation({
 
           <div className="ml-auto flex items-center gap-1.5 sm:gap-3 md:ml-2">
             <PortalInbox />
+            <div className="text-white"><KnockNotificationBell /></div>
             <LanguageSwitcher tone="dark" className="flex" />
             {onExitToPublic && (
               <button

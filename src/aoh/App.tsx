@@ -19,6 +19,7 @@ import AuthPortal, { PasswordRecoveryDialog, type AuthTab } from "./components/A
 import OfflineBanner from "./components/pwa/OfflineBanner";
 import LivePushHost from "./components/LivePushHost";
 import PortalAnnouncementTicker from "./components/portal/PortalAnnouncementTicker";
+import KnockProviderShell from "./components/notifications/KnockProviderShell";
 // Production perf: below-the-fold extras load lazily so first paint on
 // low-end Android pays only for the requested site (public or portal).
 const HopeAssistant = lazy(() => import("./components/assistant/HopeAssistant"));
@@ -151,12 +152,14 @@ function Portal({ onExitToPublic, initialTab }: { onExitToPublic: () => void; in
   const activeView = getPortalView(activeKey);
 
   return (
+    <KnockProviderShell>
     <Navigation view={activeKey} onNavigate={setView} onExitToPublic={onExitToPublic}>
       <div key={currentUser.id}>
         {activeKey !== "announcements" && <PortalAnnouncementTicker onOpen={() => setView("announcements")} />}
         {activeView?.render(ctx)}
       </div>
     </Navigation>
+    </KnockProviderShell>
   );
 }
 
