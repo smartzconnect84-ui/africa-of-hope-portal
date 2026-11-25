@@ -62,3 +62,5 @@ export const getNotificationStatus = () => call<NotificationStatus>({ action: "s
 export const setNotificationProvider = (provider: "knock" | "onesignal", confirm = false) =>
   call<{ provider: string }>({ action: "set_provider", provider, confirm });
 export const sendTestNotification = () => call<NotifyResult>({ action: "test" });
+export const setupKnockWorkflow = (environment = "development") =>
+  call<{ channel?: string; environment?: string }>({ action: "setup_knock", environment });

@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/aoh/components/ui/button";
 import { panelClass, SectionHeader } from "../Navigation";
 import {
-  getNotificationStatus, sendTestNotification, setNotificationProvider, type NotificationStatus,
+  getNotificationStatus, sendTestNotification, setNotificationProvider, setupKnockWorkflow, type NotificationStatus,
 } from "@/aoh/lib/notifications";
 
 function Pill({ ok, children }: { ok: boolean; children: React.ReactNode }) {
@@ -33,6 +33,14 @@ export default function NotificationAdmin() {
     setBusy(false);
     if (res.ok) { toast.success(`Active provider is now ${provider === "knock" ? "Knock" : "OneSignal"}.`); void load(); }
     else toast.error(res.error ?? "Could not switch provider.");
+  }
+
+  async function setupWorkflow() {
+    setBusy(true);
+    const res = await setupKnockWorkflow("development");
+    setBusy(false);
+    if (res.ok) toast.success("Knock workflow created and committed. Now press Send test.");
+    else toast.error(res.error ?? "Could not create the workflow.", { duration: 12000 });
   }
 
   async function test() {
@@ -77,6 +85,9 @@ export default function NotificationAdmin() {
             <span><b className="text-rose-600">{status.stats.failed ?? 0}</b> failed</span>
             <span className="text-slate-500">last 7 days</span>
           </div>
+          <Button size="sm" variant="outline" disabled={busy} onClick={() => void setupWorkflow()}>
+            Create Knock workflow
+          </Button>
           <Button size="sm" disabled={busy} onClick={() => void test()}>
             {busy ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Send className="mr-1.5 h-4 w-4" />} Send test to me
           </Button>
