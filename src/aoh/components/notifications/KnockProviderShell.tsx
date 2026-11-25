@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from "react";
+import { createContext, useContext, useEffect, useState, useSyncExternalStore } from "react";
 import type Knock from "@knocklabs/client";
 import { useApp } from "@/aoh/context/AppContext";
 import { getKnockClient, isKnockConfigured, KNOCK_FEED_CHANNEL_ID, resetKnockClient } from "@/aoh/lib/knock";
@@ -29,19 +29,25 @@ export default function KnockProviderShell({ children }: { children: React.React
   const id = currentUser?.id;
   const signature = `${id}|${currentUser?.name}|${currentUser?.email}|${currentUser?.role}|${currentUser?.status}`;
 
-  const value = useMemo<Ctx | null>(() => {
-    if (!id || !isKnockConfigured()) return null;
-    const knock = getKnockClient(id);
-    if (!knock) return null;
-    return { knock, feed: knock.feeds.initialize(KNOCK_FEED_CHANNEL_ID) };
-  }, [id]);
+  const [value, setValue] = useState<Ctx | null>(null);
 
+  // Create the feed inside the effect so every mount gets a fresh connection;
+  // a torn-down feed is never reused, and a late network failure never crashes the page.
   useEffect(() => {
-    if (!value) return;
-    value.feed.listenForUpdates();
-    void value.feed.fetch();
-    return () => value.feed.teardown();
-  }, [value]);
+    if (!id || !isKnockConfigured()) { setValue(null); return; }
+    const knock = getKnockClient(id);
+    if (!knock) { setValue(null); return; }
+    const feed = knock.feeds.initialize(KNOCK_FEED_CHANNEL_ID);
+    try {
+      feed.listenForUpdates();
+      void Promise.resolve(feed.fetch()).catch(() => undefined);
+    } catch { /* feed stays empty; the bell shows no items */ }
+    setValue({ knock, feed });
+    return () => {
+      setValue(null);
+      try { feed.teardown(); } catch { /* already closed */ }
+    };
+  }, [id]);
 
   useEffect(() => {
     if (!id) resetKnockClient();
