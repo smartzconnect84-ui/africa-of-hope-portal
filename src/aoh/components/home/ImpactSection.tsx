@@ -14,7 +14,7 @@ export default function ImpactSection({ copy, w }: { copy: SectionCopy; w: Websi
           <div className="flex flex-wrap items-end justify-between gap-6 border-b border-white/15 pb-8">
             <div className="max-w-2xl min-w-0">
               <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-amber-300"><GraduationCap className="h-4 w-4 shrink-0" aria-hidden="true" /> Our learning community</p>
-              <h2 id="success-heading" className="mt-4 break-words text-3xl font-bold leading-tight tracking-tight sm:text-4xl lg:text-5xl">{copy.title || 'Student Success Stories'}</h2>
+              <h2 id="success-heading" className="aoh-text-secondary text-secondary mt-4 break-words text-3xl font-bold leading-tight tracking-tight sm:text-4xl lg:text-5xl">{copy.title || 'Student Success Stories'}</h2>
               {copy.subtitle && <p className="mt-4 text-base leading-7 text-emerald-100/85">{copy.subtitle}</p>}
             </div>
             <a href="#programmes" className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-amber-400/60 px-5 text-sm font-semibold text-amber-200 transition hover:bg-amber-400 hover:text-emerald-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-300">Explore programmes <ArrowRight className="h-4 w-4" aria-hidden="true" /></a>
@@ -29,7 +29,7 @@ export default function ImpactSection({ copy, w }: { copy: SectionCopy; w: Websi
             <figcaption className="flex min-w-0 flex-col justify-center px-6 py-8 sm:p-10">
               <span className="mb-5 h-1 w-12 rounded-full bg-amber-400" aria-hidden="true" />
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-300">Opportunity through learning</p>
-              <h3 className="mt-3 text-2xl font-semibold leading-snug tracking-tight sm:text-3xl">Knowledge. Confidence. Possibility.</h3>
+              <h3 className="aoh-text-bg text-background mt-3 text-2xl font-semibold leading-snug tracking-tight sm:text-3xl">Knowledge. Confidence. Possibility.</h3>
               <p className="mt-4 text-sm leading-7 text-emerald-50/85">Education is a foundation for opportunity and independence. At AFRICA OF HOPE, our focus is helping people build practical skills, develop their potential and take meaningful steps toward their future.</p>
               <a href="#about" className="mt-6 inline-flex min-h-11 items-center gap-2 self-start text-sm font-semibold text-amber-200 underline decoration-amber-300/40 underline-offset-4 hover:text-amber-100">Meet the organization behind the mission <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" /></a>
             </figcaption>

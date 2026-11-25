@@ -20,8 +20,7 @@ export default function CtaBand({
         <div className="aoh-glass-dark grid gap-5 rounded-[2rem] border border-white/15 bg-white/5 p-5 sm:p-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <Reveal className="max-w-xl">
             <p className="inline-flex items-center gap-2 rounded-full border border-amber-300/30 bg-amber-400/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-200">Join our mission</p>
-            {copy.title && <h2 className="mt-2.5 text-3xl font-bold tracking-tight text-amber-300 sm:text-4xl">{copy.title}</h2>}
-            {copy.subtitle && <p className="mt-2 text-sm leading-6 text-emerald-100/85 sm:text-base">{copy.subtitle}</p>}
+            {copy.title && <h2 className="aoh-text-bg mt-2.5 text-3xl font-bold tracking-tight text-background sm:text-4xl">{copy.title}</h2>}
             <p className="mt-3 text-xs leading-6 text-emerald-100/60">A not-for-profit learning community · Every application is reviewed by our registrar · Financial support options available.</p>
           </Reveal>
           <Reveal delay={0.08} className="flex flex-col gap-3 sm:flex-row lg:justify-end">

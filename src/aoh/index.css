@@ -1085,3 +1085,7 @@ html { font-size: 115%; }
 
 /* Hero: keep headline white over the photo in every mode. */
 html .aoh-public .aoh-hero-v2 h1 { color: #ffffff !important; }
+
+/* Token text colours that must win over the global heading colour rule. */
+html .aoh-public .aoh-text-bg.aoh-text-bg { color: var(--background) !important; }
+html .aoh-public .aoh-text-secondary.aoh-text-secondary { color: var(--secondary) !important; }
