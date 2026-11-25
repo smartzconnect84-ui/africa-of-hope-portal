@@ -269,9 +269,6 @@ export default function HeroSlider({ onOpenApply, onEnterPortal }: HeroSliderPro
                       </>
                     ) : null}
                   </h1>
-                  <p className="mt-5 max-w-[56ch] text-pretty text-base leading-relaxed text-emerald-50/90 sm:text-lg">
-                    {slide.description}
-                  </p>
                 </motion.div>
               </AnimatePresence>
             </div>
