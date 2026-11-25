@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import { X, Send, Sparkles, Bot } from "lucide-react";
+import { ArrowUp, Check, Copy, MessageSquare, Sparkles, SquarePen, Square, X } from "lucide-react";
 import { useApp } from "../../context/AppContext";
 import { useAssistantVisibility } from "../../context/AssistantVisibility";
 import { streamAssistant, AssistantError, type AssistantMessage } from "../../lib/assistant";
 import { answerLocally } from "../../lib/assistantOffline";
-import { Button } from "@/aoh/components/ui/button";
 import { cn } from "@/aoh/lib/utils";
 import { newId } from "@/aoh/lib/ids";
 
@@ -41,6 +40,7 @@ export default function HopeAssistant() {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [savedIds, setSavedIds] = useState<string[]>([]);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [materialCohortId, setMaterialCohortId] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -173,137 +173,179 @@ export default function HopeAssistant() {
     }
   }
 
+  function newChat() {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setBubbles([]);
+    setDraft("");
+    setSending(false);
+  }
+
+  function stop() {
+    abortRef.current?.abort();
+  }
+
+  function copyReply(id: string, content: string) {
+    void navigator.clipboard?.writeText(content).then(() => {
+      setCopiedId(id);
+      window.setTimeout(() => setCopiedId((cur) => (cur === id ? null : cur)), 1500);
+    }).catch(() => undefined);
+  }
+
+  const firstName = currentUser?.name?.split(" ")[0];
+
   return (
     <>
-      {/* Launcher and panel are sized at ~70% (30% smaller) of the original
-          dimensions — width/height/padding/icons scale down together, but no
-          text drops below 12px (text-xs) so copy stays readable. */}
       {!open && (
         <button
           type="button"
           onClick={() => setOpen(true)}
           aria-label={label}
           className={cn(
-            "fixed z-40 flex items-center gap-2 rounded-full bg-[#022c22] text-xs font-bold text-white shadow-2xl shadow-emerald-950/30 transition hover:brightness-110 hover:-translate-y-1",
+            "fixed z-40 flex items-center gap-2 rounded-full bg-[#171717] text-xs font-semibold text-white shadow-xl transition hover:bg-black",
             surface === "portal"
-              ? "bottom-4 right-4 left-auto h-8 w-8 justify-center p-0 lg:w-[157px] lg:justify-start lg:px-[11px]"
-              : "bottom-5 right-5 px-[14px] py-[10px] max-sm:bottom-4 max-sm:right-3 max-sm:h-8 max-sm:w-8 max-sm:justify-center max-sm:p-0",
+              ? "bottom-4 right-4 left-auto h-10 w-10 justify-center p-0 lg:w-auto lg:justify-start lg:px-3.5"
+              : "bottom-5 right-5 px-3.5 py-2.5 max-sm:bottom-4 max-sm:right-3 max-sm:h-10 max-sm:w-10 max-sm:justify-center max-sm:p-0",
           )}
         >
-          <span className="grid h-[25px] w-[25px] place-items-center rounded-full bg-amber-400 text-[#022c22] max-sm:h-5 max-sm:w-5">
-            <Sparkles className="h-[13px] w-[13px]" />
-          </span>
+          <MessageSquare className="h-4 w-4" />
           <span className={surface === "portal" ? "sr-only lg:not-sr-only" : "max-sm:sr-only"}>{label}</span>
         </button>
       )}
 
       {open && (
-        <div className="fixed bottom-4 right-3 z-40 flex h-[min(420px,calc(100dvh-2rem))] w-[min(320px,calc(100vw-1.5rem))] max-w-[92vw] flex-col overflow-hidden rounded-2xl border border-emerald-900/10 bg-white shadow-2xl sm:bottom-5 sm:right-5 sm:h-[420px] sm:w-[266px]">
-          <div className="flex items-center gap-2 bg-gradient-to-br from-emerald-900 to-[#022c22] p-[11px] text-white">
-            <span className="relative grid h-7 w-7 flex-shrink-0 place-items-center rounded-xl bg-amber-400 text-[#022c22]">
-              <Bot className="h-[14px] w-[14px]" />
-              <span className="absolute -right-0.5 -bottom-0.5 h-[7px] w-[7px] rounded-full bg-emerald-400 ring-1 ring-[#022c22]" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-bold">AOH AI</p>
-              <p className="truncate text-xs text-emerald-200">AFRICA OF HOPE</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              aria-label="Close assistant"
-              className="grid h-6 w-6 place-items-center rounded-lg text-emerald-100 hover:bg-white/10"
-            >
-              <X className="h-[11px] w-[11px]" />
+        <div
+          role="dialog"
+          aria-label={label}
+          className="fixed inset-0 z-40 flex flex-col bg-white text-[#0d0d0d] sm:inset-auto sm:bottom-5 sm:right-5 sm:h-[min(680px,calc(100dvh-2.5rem))] sm:w-[440px] sm:overflow-hidden sm:rounded-3xl sm:border sm:border-black/10 sm:shadow-2xl"
+        >
+          <header className="flex items-center gap-1 border-b border-black/5 px-3 py-2.5 pt-[max(0.625rem,env(safe-area-inset-top))]">
+            <button type="button" onClick={newChat} aria-label="New chat" title="New chat" className="grid h-9 w-9 place-items-center rounded-lg text-[#424242] hover:bg-[#f4f4f4]">
+              <SquarePen className="h-[18px] w-[18px]" />
             </button>
-          </div>
+            <p className="flex-1 truncate px-1 text-[15px] font-semibold">AOH AI</p>
+            <button type="button" onClick={() => setOpen(false)} aria-label="Close assistant" className="grid h-9 w-9 place-items-center rounded-lg text-[#424242] hover:bg-[#f4f4f4]">
+              <X className="h-[18px] w-[18px]" />
+            </button>
+          </header>
 
-          <div ref={scrollRef} className="flex-1 space-y-2 overflow-y-auto p-[11px]">
-            {bubbles.length === 0 && (
-              <div className="space-y-2">
-                <p className="text-xs text-slate-600">
-                  Hi{currentUser ? ` ${currentUser.name.split(" ")[0]}` : ""}! I'm AOH AI, your intelligent assistant from AFRICA OF HOPE. How can I help you today?
-                </p>
-                <div className="ml-1 flex flex-wrap gap-1">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-5">
+            {bubbles.length === 0 ? (
+              <div className="mx-auto flex h-full max-w-md flex-col items-center justify-center text-center">
+                <h2 className="text-[22px] font-semibold tracking-tight">
+                  {firstName ? `What can I help with, ${firstName}?` : "What can I help with?"}
+                </h2>
+                <p className="mt-1.5 text-sm text-[#6b6b6b]">Ask about {state.settings.academyName || "AFRICA OF HOPE"}, your studies or anything else.</p>
+                <div className="mt-6 grid w-full gap-2">
                   {suggestionsFor(currentUser?.role ?? null).map((s) => (
                     <button
                       key={s} type="button" onClick={() => send(s)}
-                      className="rounded-full border border-emerald-600/25 bg-white px-2 py-1 text-left text-xs font-semibold text-emerald-800 hover:bg-emerald-50"
+                      className="rounded-2xl border border-black/10 px-4 py-3 text-left text-sm text-[#2f2f2f] transition hover:bg-[#f7f7f8]"
                     >
                       {s}
                     </button>
                   ))}
                 </div>
               </div>
-            )}
-
-            {bubbles.map((b) => (
-              <div key={b.id} className={cn("flex", b.role === "user" ? "justify-end" : "justify-start")}>
-                {b.role === "error" ? (
-                  <p className="max-w-[85%] rounded-xl bg-rose-50 px-[10px] py-[7px] text-xs text-rose-700">{b.content}</p>
-                ) : (
-                  <div
-                    className={cn(
-                      "max-w-[85%] rounded-xl px-[10px] py-[7px] text-xs leading-relaxed",
-                      b.role === "user" ? "bg-emerald-700 text-white" : "bg-slate-100 text-slate-800",
-                    )}
-                  >
-                    {b.content ? (
-                      <div>
-                      <div className="prose-sm [&_p]:my-1 [&_ul]:my-1 [&_ul]:pl-4">
-                        <ReactMarkdown>{b.content}</ReactMarkdown>
-                      </div>
-                      {b.role === "assistant" && b.complete && canSaveMaterial && (
-                        <div className="mt-1.5 space-y-1">
-                          {materialCohorts.length > 0 && (
-                            <label className="flex items-center gap-1 text-[11px] text-emerald-800">Course:
-                              <select value={materialCohortId || materialCohorts[0].id} onChange={(e) => setMaterialCohortId(e.target.value)} className="max-w-[150px] rounded-full border border-emerald-600/30 bg-white px-1.5 py-0.5 text-[11px]" aria-label="Course for training material">
-                                {materialCohorts.map((c) => (
-                                  <option key={c.id} value={c.id}>{(state.programs ?? []).find((p) => p.id === c.programId)?.title ?? "Course"} · {c.name}</option>
-                                ))}
-                              </select>
-                            </label>
-                          )}
-                          <button type="button" disabled={savedIds.includes(b.id)} onClick={() => saveToMaterials(b.id, b.content)} className="inline-flex min-h-8 items-center gap-1 rounded-full border border-emerald-600/30 bg-white px-2.5 text-[11px] font-semibold text-emerald-800 hover:bg-emerald-50 disabled:opacity-60">{savedIds.includes(b.id) ? "Saved to training materials ✓" : "Save to training materials"}</button>
-                        </div>
-                      )}
-                      {b.role === "assistant" && b.complete && canSaveMaterial && savedIds.includes(b.id) && (
-                        <p className="mt-1 text-[11px] text-emerald-700">Saved with course context. Open Academic Planning → Materials to review and submit it to the shared training materials.</p>
-                      )}
-                      </div>
-                    ) : sending ? (
-                      <span className="inline-flex items-center gap-1 py-1" aria-label="Waiting for a reply">
-                        <i className="h-1 w-1 animate-pulse rounded-full bg-emerald-500" />
-                        <i className="h-1 w-1 animate-pulse rounded-full bg-emerald-500 [animation-delay:150ms]" />
-                        <i className="h-1 w-1 animate-pulse rounded-full bg-emerald-500 [animation-delay:300ms]" />
-                      </span>
+            ) : (
+              <div className="mx-auto max-w-2xl space-y-6">
+                {bubbles.map((b) => (
+                  <div key={b.id} className={cn("flex", b.role === "user" ? "justify-end" : "justify-start")}>
+                    {b.role === "error" ? (
+                      <p className="max-w-full rounded-2xl bg-rose-50 px-4 py-2.5 text-sm text-rose-700">{b.content}</p>
+                    ) : b.role === "user" ? (
+                      <p className="max-w-[85%] whitespace-pre-wrap break-words rounded-3xl bg-[#f4f4f4] px-4 py-2.5 text-[15px] leading-relaxed">{b.content}</p>
                     ) : (
-                      <span className="text-slate-500">No reply came back. Please try again.</span>
+                      <div className="flex w-full gap-3">
+                        <span className="mt-0.5 grid h-7 w-7 flex-none place-items-center rounded-full border border-black/10 bg-white text-[#0d0d0d]">
+                          <Sparkles className="h-3.5 w-3.5" />
+                        </span>
+                        <div className="min-w-0 flex-1 text-[15px] leading-7">
+                          {b.content ? (
+                            <>
+                              <div className="[&_a]:underline [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-2 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-[#f4f4f4] [&_pre]:p-3 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5">
+                                <ReactMarkdown>{b.content}</ReactMarkdown>
+                              </div>
+                              {b.complete && (
+                                <div className="mt-1 flex items-center gap-1 text-[#6b6b6b]">
+                                  <button type="button" onClick={() => copyReply(b.id, b.content)} aria-label="Copy reply" className="grid h-8 w-8 place-items-center rounded-lg hover:bg-[#f4f4f4]">
+                                    {copiedId === b.id ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                                  </button>
+                                </div>
+                              )}
+                              {b.complete && canSaveMaterial && (
+                                <div className="mt-2 space-y-1.5">
+                                  {materialCohorts.length > 0 && (
+                                    <label className="flex items-center gap-1.5 text-xs text-[#6b6b6b]">Course:
+                                      <select value={materialCohortId || materialCohorts[0].id} onChange={(e) => setMaterialCohortId(e.target.value)} className="max-w-[200px] rounded-full border border-black/10 bg-white px-2 py-1 text-xs" aria-label="Course for training material">
+                                        {materialCohorts.map((c) => (
+                                          <option key={c.id} value={c.id}>{(state.programs ?? []).find((p) => p.id === c.programId)?.title ?? "Course"} · {c.name}</option>
+                                        ))}
+                                      </select>
+                                    </label>
+                                  )}
+                                  <button type="button" disabled={savedIds.includes(b.id)} onClick={() => saveToMaterials(b.id, b.content)} className="inline-flex min-h-9 items-center gap-1 rounded-full border border-black/10 bg-white px-3 text-xs font-medium hover:bg-[#f7f7f8] disabled:opacity-60">
+                                    {savedIds.includes(b.id) ? "Saved to training materials ✓" : "Save to training materials"}
+                                  </button>
+                                  {savedIds.includes(b.id) && (
+                                    <p className="text-xs text-[#6b6b6b]">Open Academic Planning → Materials to review and submit it.</p>
+                                  )}
+                                </div>
+                              )}
+                            </>
+                          ) : sending ? (
+                            <span className="inline-flex items-center gap-1 py-2" aria-label="Waiting for a reply">
+                              <i className="h-2 w-2 animate-pulse rounded-full bg-[#0d0d0d]" />
+                            </span>
+                          ) : (
+                            <span className="text-[#6b6b6b]">No reply came back. Please try again.</span>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </div>
-                )}
+                ))}
               </div>
-            ))}
+            )}
           </div>
 
           <form
-            className="border-t border-slate-100 p-2"
-            onSubmit={(e) => { e.preventDefault(); send(draft); }}
+            className="px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-1"
+            onSubmit={(e) => { e.preventDefault(); void send(draft); }}
           >
-            <div className="flex items-center gap-2 rounded-2xl border border-slate-200 px-[10px] py-1">
-              <input
+            <div className="mx-auto flex max-w-2xl items-end gap-2 rounded-[26px] border border-black/10 bg-[#f4f4f4] py-2 pl-4 pr-2">
+              <textarea
                 value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                placeholder="Ask AOH AI…"
+                rows={1}
+                onChange={(e) => {
+                  const el = e.currentTarget;
+                  const value = el.value;
+                  setDraft(value);
+                  el.style.height = "auto";
+                  el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                    e.preventDefault();
+                    void send(draft);
+                  }
+                }}
+                placeholder="Message AOH AI"
+                aria-label="Message AOH AI"
                 maxLength={1500}
-                disabled={sending}
-                className="flex-1 bg-transparent py-1.5 text-xs outline-none disabled:opacity-60"
+                className="max-h-36 min-h-[28px] flex-1 resize-none bg-transparent py-1 text-[15px] leading-6 outline-none placeholder:text-[#8e8e8e]"
               />
-              <Button type="submit" size="icon" disabled={sending || !draft.trim()} className="h-[25px] w-[25px] rounded-xl bg-emerald-700 hover:bg-emerald-800">
-                <Send className="h-[11px] w-[11px]" />
-              </Button>
+              {sending ? (
+                <button type="button" onClick={stop} aria-label="Stop generating" className="grid h-8 w-8 flex-none place-items-center rounded-full bg-[#0d0d0d] text-white">
+                  <Square className="h-3 w-3 fill-current" />
+                </button>
+              ) : (
+                <button type="submit" disabled={!draft.trim()} aria-label="Send message" className="grid h-8 w-8 flex-none place-items-center rounded-full bg-[#0d0d0d] text-white transition disabled:bg-[#d0d0d0]">
+                  <ArrowUp className="h-4 w-4" />
+                </button>
+              )}
             </div>
-            <p className="mt-1.5 text-center text-xs text-slate-400">AOH AI can make mistakes. Verify important information and school details.</p>
+            <p className="mt-2 text-center text-xs text-[#8e8e8e]">AOH AI can make mistakes. Check important information and school details.</p>
           </form>
         </div>
       )}
