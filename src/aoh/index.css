@@ -1130,3 +1130,27 @@ html .aoh-public .aoh-text-secondary.aoh-text-secondary { color: var(--secondary
     transition-duration: .01ms !important;
   }
 }
+
+/* ---- Home page: one shared content width, gutter and vertical rhythm (matches nav + hero) ---- */
+.home-block > section,
+.home-block > div > section {
+  padding-block: clamp(2.5rem, 5vw, 4.5rem);
+}
+.home-block > section > .mx-auto,
+.home-block > div > section > .mx-auto,
+.home-block > section > div > .mx-auto {
+  width: 100%;
+  max-width: 80rem;
+  padding-inline: 1rem;
+}
+@media (min-width: 640px) {
+  .home-block > section > .mx-auto,
+  .home-block > div > section > .mx-auto,
+  .home-block > section > div > .mx-auto { padding-inline: 1.5rem; }
+}
+@media (min-width: 1024px) {
+  .home-block > section > .mx-auto,
+  .home-block > div > section > .mx-auto,
+  .home-block > section > div > .mx-auto { padding-inline: 2rem; }
+}
+.home-block section h2 { text-wrap: balance; }
