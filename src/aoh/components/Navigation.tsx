@@ -199,6 +199,15 @@ export function SetupError({ message, retry }: { message: string; retry: () => v
   );
 }
 
+const GROUP_BG: Record<string, string> = {
+  overview: "bg-[#51865f]",
+  administration: "bg-[#46744c]",
+  learning: "bg-[#377043]",
+  finance: "bg-[#428651]",
+  community: "bg-[#549d61]",
+  system: "bg-[#348d4c]",
+};
+
 function sidebarGroupLabel(role: string | null): string {
   if (role === "Student") return "Student Desk";
   if (role === "Teacher") return "Instructors";
@@ -585,7 +594,7 @@ export default function Navigation({
       style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
     >
       {renderSearch("mx-1 mb-1 md:hidden", "left-0 right-0", "h-10 w-full")}
-      <p className="mx-1 mb-1 flex items-center gap-2 rounded-xl bg-black px-3 py-2 text-[13px] font-bold uppercase tracking-[0.14em] text-white shadow-sm shadow-black/20">
+      <p className="mx-1 mb-1 flex items-center gap-2 rounded-xl bg-transparent px-3 py-2 text-[13px] font-bold uppercase tracking-[0.14em] text-white shadow-sm shadow-black/20">
         <Sparkles className="h-4 w-4 shrink-0 text-amber-300" aria-hidden="true" />
         <span className="truncate">{sidebarGroupLabel(ctx.role)}</span>
       </p>
@@ -598,7 +607,7 @@ export default function Navigation({
               onClick={() => toggleGroup(group.id)}
               aria-expanded={isOpen}
               aria-controls={`portal-nav-group-${group.id}`}
-              className="flex min-h-[36px] items-center gap-1.5 rounded-xl bg-black px-2 py-1 text-left text-[12px] font-bold uppercase tracking-wider text-white ring-1 ring-white/10 transition hover:bg-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600/50"
+              className={cn("flex min-h-[36px] items-center gap-1.5 rounded-none px-2 py-1 text-left text-[12px] font-bold uppercase tracking-wider text-white ring-1 ring-white/10 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600/50", GROUP_BG[group.id] ?? "bg-black")}
             >
               <span className="flex-1 truncate">{group.label}</span>
               <span className="rounded-full bg-white/20 px-1.5 py-0.5 text-[11px] font-semibold normal-case tracking-normal text-white">
@@ -619,7 +628,7 @@ export default function Navigation({
           <button
             type="button"
             onClick={onExitToPublic}
-            className="flex min-h-[40px] w-full items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[13px] font-medium leading-snug text-white shadow-sm shadow-emerald-900/20 transition hover:brightness-110 bg-gradient-to-r from-emerald-700 via-teal-700 to-emerald-800"
+            className="flex min-h-[40px] w-full items-center gap-1.5 rounded-full bg-[#575757] px-3 py-1.5 text-sm font-medium leading-snug text-white shadow-sm shadow-emerald-900/20 transition hover:brightness-110"
           >
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/15 ring-1 ring-white/25">
               <Globe className="h-[20px] w-[20px] shrink-0" />
@@ -630,7 +639,7 @@ export default function Navigation({
         <button
           type="button"
           onClick={() => resetDemoData()}
-          className="flex min-h-[40px] w-full items-center gap-1.5 rounded-xl border border-slate-200/80 bg-white/80 px-2.5 py-1.5 text-[13px] font-medium leading-snug text-slate-500 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50/60 hover:text-slate-700"
+          className="flex min-h-[40px] w-full items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/80 px-2.5 py-1.5 text-[13px] font-medium leading-snug text-slate-500 shadow-sm transition hover:border-emerald-200 hover:bg-emerald-50/60 hover:text-slate-700"
         >
           <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-slate-100 to-emerald-100/60 text-emerald-700 ring-1 ring-emerald-900/10">
             <RefreshCw className="h-[20px] w-[20px] shrink-0" />
