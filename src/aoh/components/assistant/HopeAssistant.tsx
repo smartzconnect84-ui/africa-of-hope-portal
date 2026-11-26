@@ -36,6 +36,8 @@ export default function HopeAssistant() {
   const { state, currentUser } = useApp();
   const { hidden } = useAssistantVisibility();
   const [open, setOpen] = useState(false);
+  // Hidden only until the page is refreshed (not saved anywhere).
+  const [dismissed, setDismissed] = useState(false);
   const [bubbles, setBubbles] = useState<ChatBubble[]>([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
@@ -77,7 +79,7 @@ export default function HopeAssistant() {
     setSending(false);
   }, [currentUser?.id]);
 
-  if (!state.settings.assistantEnabled || hidden || covered) return null;
+  if (!state.settings.assistantEnabled || hidden || covered || dismissed) return null;
 
   const configuredLabel = state.websiteSettings.assistantLauncherLabel?.trim();
   const label = !configuredLabel || /luna|hope assistant|afrohope ai/i.test(configuredLabel)
@@ -201,27 +203,43 @@ export default function HopeAssistant() {
   return (
     <>
       {!open && (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          aria-label={label}
+        <div
           className={cn(
-            "fixed z-40 flex items-center gap-2 rounded-full bg-[#171717] text-xs font-semibold text-white shadow-xl transition hover:bg-black",
-            surface === "portal"
-              ? "bottom-4 right-4 left-auto h-10 w-10 justify-center p-0 lg:w-auto lg:justify-start lg:px-3.5"
-              : "bottom-5 right-5 px-3.5 py-2.5 max-sm:bottom-4 max-sm:right-3 max-sm:h-10 max-sm:w-10 max-sm:justify-center max-sm:p-0",
+            "fixed z-40",
+            surface === "portal" ? "bottom-4 right-4" : "bottom-5 right-5 max-sm:bottom-4 max-sm:right-3",
           )}
         >
-          <MessageSquare className="h-4 w-4" />
-          <span className={surface === "portal" ? "sr-only lg:not-sr-only" : "max-sm:sr-only"}>{label}</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            aria-label={label}
+            className={cn(
+              "flex h-9 items-center gap-1.5 rounded-full bg-[#171717] text-[11px] font-semibold text-white shadow-lg transition hover:bg-black",
+              surface === "portal"
+                ? "w-9 justify-center p-0 lg:w-auto lg:justify-start lg:px-3"
+                : "px-3 max-sm:w-9 max-sm:justify-center max-sm:p-0",
+            )}
+          >
+            <MessageSquare className="h-3.5 w-3.5" />
+            <span className={surface === "portal" ? "sr-only lg:not-sr-only" : "max-sm:sr-only"}>{label}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setDismissed(true)}
+            aria-label="Hide assistant until the page is refreshed"
+            title="Hide"
+            className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full border border-white bg-slate-700 text-white shadow hover:bg-black"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </div>
       )}
 
       {open && (
         <div
           role="region"
           aria-label={label}
-          className="fixed inset-0 z-40 flex flex-col bg-white text-[#0d0d0d] sm:inset-auto sm:bottom-5 sm:right-5 sm:h-[min(680px,calc(100dvh-2.5rem))] sm:w-[440px] sm:overflow-hidden sm:rounded-3xl sm:border sm:border-black/10 sm:shadow-2xl"
+          className="fixed inset-0 z-40 flex flex-col bg-white text-[#0d0d0d] sm:inset-auto sm:bottom-5 sm:right-5 sm:h-[min(540px,calc(100dvh-2.5rem))] sm:w-[360px] sm:overflow-hidden sm:rounded-3xl sm:border sm:border-black/10 sm:shadow-2xl"
         >
           <header className="flex items-center gap-1 border-b border-black/5 px-3 py-2.5 pt-[max(0.625rem,env(safe-area-inset-top))]">
             <button type="button" onClick={newChat} aria-label="New chat" title="New chat" className="grid h-9 w-9 place-items-center rounded-lg text-[#424242] hover:bg-[#f4f4f4]">
