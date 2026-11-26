@@ -3,7 +3,7 @@ import { supabase } from "@/aoh/integrations/supabase/client";
 import { toast } from "sonner";
 import {
   Award, Printer, Plus, Check, X, Search, CalendarDays, Download, FileDown, FileJson,
-  FileSpreadsheet, Loader2, ShieldX, AlertTriangle, MoreHorizontal,
+  FileSpreadsheet, Loader2, ShieldX, AlertTriangle, MoreHorizontal, Trash2,
 } from "lucide-react";
 import { useApp } from "../context/AppContext";
 import { usePermission } from "../hooks/usePermission";
@@ -47,7 +47,7 @@ const statusPill = (status: string) => (
 );
 
 export function CertificateStudio() {
-  const { state, currentUser, issueCertificate, revokeCertificate } = useApp();
+  const { state, currentUser, issueCertificate, revokeCertificate, refresh } = useApp();
   const canManage = usePermission("certificates.manage");
   // Revocation is fixed to the two administrative roles and re-checked by the database.
   const isAdministrator = currentUser?.role === "School Admin" || currentUser?.role === "Super Admin";
@@ -63,6 +63,7 @@ export function CertificateStudio() {
   const [revokeReason, setRevokeReason] = useState("");
   const [revokeError, setRevokeError] = useState("");
   const [revoking, setRevoking] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const students = state.users.filter((u) => u.role === "Student" && u.status === "Active");
   const certs = canManage
@@ -123,6 +124,30 @@ export function CertificateStudio() {
       setRevokeError(err instanceof Error ? err.message : String(err));
     } finally {
       setRevoking(false);
+    }
+  };
+
+  const revokedCerts = state.certificates.filter((c) => c.status === "Revoked");
+
+  /** Permanently removes revoked records only; valid certificates must be revoked first. */
+  const deleteRevoked = async (rows: Certificate[]) => {
+    const targets = rows.filter((c) => c.status === "Revoked");
+    if (!targets.length) return;
+    const message = targets.length === 1
+      ? `Delete revoked certificate ${targets[0].serial}? This cannot be undone.`
+      : `Delete all ${targets.length} revoked certificates? This cannot be undone.`;
+    if (!window.confirm(message)) return;
+    setDeleting(true);
+    try {
+      const { data, error } = await supabase.from("certificates").delete().in("id", targets.map((c) => c.id)).select("id");
+      if (error) throw new Error(error.message);
+      if (!data?.length) throw new Error("Nothing was deleted. Your account may not have permission to delete certificates.");
+      toast.success(`${data.length} revoked certificate${data.length === 1 ? "" : "s"} deleted`);
+      await refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not delete the certificate.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -310,6 +335,11 @@ export function CertificateStudio() {
               />
             </div>
             <span className="text-xs text-slate-500">{visibleCerts.length} of {certs.length} shown</span>
+            {isAdministrator && revokedCerts.length > 0 && (
+              <Button size="sm" variant="outline" disabled={deleting} className="border-rose-200 text-rose-700 hover:bg-rose-50" onClick={() => void deleteRevoked(revokedCerts)}>
+                <Trash2 className="mr-1 h-3.5 w-3.5" /> Clear all revoked ({revokedCerts.length})
+              </Button>
+            )}
           </div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[880px]">
@@ -371,6 +401,17 @@ export function CertificateStudio() {
                             onClick={() => { setRevokeTarget(c); setRevokeReason(""); setRevokeError(""); }}
                           >
                             <ShieldX className="mr-1 h-3.5 w-3.5" /> Revoke
+                          </Button>
+                        )}
+                        {isAdministrator && c.status === "Revoked" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={deleting}
+                            className="border-rose-200 text-rose-700 hover:bg-rose-50"
+                            onClick={() => void deleteRevoked([c])}
+                          >
+                            <Trash2 className="mr-1 h-3.5 w-3.5" /> Delete
                           </Button>
                         )}
                       </div>
