@@ -54,7 +54,7 @@ function make(
 export const CATALOG_2026: Program[] = [
   // ── Six-month courses · REG 45 US$ ───────────────────────────────
   make("cat-nine-media", "Media & Communication Studies", SIX_MONTH, "Diploma in Media & Communication Studies", "News writing, reporting, presentation and media ethics with studio and field practice.", ["blended", "onsite"]),
-  make("cat-nine-teacher", "Teacher's Education", SIX_MONTH, "Diploma in Teacher Education", "Lesson planning, classroom management and child-centred teaching with teaching practice.", ["onsite", "blended"]),
+  make("cat-nine-teacher", "Instructor Education", SIX_MONTH, "Diploma in Instructor Education", "Lesson planning, classroom management and child-centred teaching with teaching practice.", ["onsite", "blended"]),
   make("cat-nine-audio", "Audio Ads Production", SIX_MONTH, "Diploma in Audio Ads Production", "Voice-over, scripting, jingles and radio commercials produced in a real studio workflow.", ["blended", "onsite"]),
   make("cat-nine-secre", "Secretarial Science", SIX_MONTH, "Diploma in Secretarial Science", "Office administration, shorthand speed, records, front-desk etiquette and computer applications.", ["onsite", "blended"]),
   make("cat-nine-admin", "School Administration", SIX_MONTH, "Diploma in School Administration", "School records, admissions, staff supervision, discipline systems and parent relations.", ["online", "blended"]),

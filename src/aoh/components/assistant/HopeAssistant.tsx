@@ -84,7 +84,7 @@ export default function HopeAssistant() {
     ? "AOH AI"
     : configuredLabel;
   const surface: "public" | "portal" = currentUser ? "portal" : "public";
-  // Only Teachers, Staff and Admin accounts may save research into the Resource Center.
+  // Only Instructors, Staff and Admin accounts may save research into the Resource Center.
   // Explicit staff allowlist: every non-student staff role qualifies; Students never see the save control.
   const STAFF_SAVE_ROLES = ["Teacher", "Registrar", "Admission Officer", "Finance Officer", "School Admin", "Super Admin", "Director of Education", "Research Officer", "Executive Assistant", "Data Entry Officer", "Public Relations Officer", "Customer Care Officer"] as const;
   const canSaveMaterial = !!currentUser && (STAFF_SAVE_ROLES as readonly string[]).includes(currentUser.role);

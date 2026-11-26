@@ -133,7 +133,7 @@ export function explainAcademicError(error: { message: string; details?: string 
     } catch { return "This course cannot be added to your plan."; }
   }
   const friendly: Record<string, string> = {
-    class_session_schedule_conflict: "This class overlaps another approved session for the teacher or cohort.",
+    class_session_schedule_conflict: "This class overlaps another approved session for the instructor or cohort.",
     invalid_lesson_assessment_settings: "Check the lesson position, time limits, and grade weights.",
     approved_learning_unit_requires_published_quiz: "Publish the linked quiz in Quiz Builder before lesson approval.",
     decision_note_required: "Add a decision note for a rejection or revision request.",
@@ -339,7 +339,7 @@ export function createAcademicApi(client: AcademicApiClient, now: () => number =
     const { data, error } = await client.from("discussion_replies").update({ is_answer: isAnswer })
       .eq("id", replyId).select("id");
     if (error) throw new Error(explainAcademicError(error) ?? error.message);
-    if (!data?.length) throw new Error("Only this cohort's teacher or an academic administrator can mark answers.");
+    if (!data?.length) throw new Error("Only this cohort's instructor or an academic administrator can mark answers.");
   },
   enrollments(studentId?: string) {
     return rows<CourseEnrollment>("course_enrollments", (q) =>

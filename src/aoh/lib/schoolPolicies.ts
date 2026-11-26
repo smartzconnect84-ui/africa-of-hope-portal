@@ -56,7 +56,7 @@ export const DEFAULT_POLICIES: SchoolPolicy[] = [
     title: "Attendance & Participation Policy", category: "Academics", version: 1,
     effectiveDate: "2025-09-01", isPublished: true, requiresAcceptance: true, sort: 30,
     summary: "Minimum 75% attendance, lateness, absence reporting and participation.",
-    body: `1. ATTENDANCE REQUIREMENT\n1.1 Students must attend at least 75% of scheduled sessions per programme.\n1.2 Falling below 75% without approved leave blocks examination entry and certification.\n\n2. LATENESS\nArriving more than 15 minutes late counts as "Late". Three late arrivals equal one absence.\n\n3. REPORTING ABSENCE\n3.1 Absences must be reported to the cohort teacher before the session where possible.\n3.2 Illness beyond 2 days needs a clinic note; emergencies are reviewed case by case.\n\n4. ONLINE PARTICIPATION\nFor online sessions, camera-on presence, quiz completion and assignment submission count toward participation.`,
+    body: `1. ATTENDANCE REQUIREMENT\n1.1 Students must attend at least 75% of scheduled sessions per programme.\n1.2 Falling below 75% without approved leave blocks examination entry and certification.\n\n2. LATENESS\nArriving more than 15 minutes late counts as "Late". Three late arrivals equal one absence.\n\n3. REPORTING ABSENCE\n3.1 Absences must be reported to the cohort instructor before the session where possible.\n3.2 Illness beyond 2 days needs a clinic note; emergencies are reviewed case by case.\n\n4. ONLINE PARTICIPATION\nFor online sessions, camera-on presence, quiz completion and assignment submission count toward participation.`,
   },
   {
     id: "fees-payments-refunds", slug: "fees-payments-refunds",
@@ -77,7 +77,7 @@ export const DEFAULT_POLICIES: SchoolPolicy[] = [
     title: "Safeguarding & Student Welfare Policy", category: "Welfare", version: 1,
     effectiveDate: "2025-09-01", isPublished: true, requiresAcceptance: true, sort: 60,
     summary: "Protection from harm, reporting channels and welfare support.",
-    body: `1. COMMITMENT\nAfrica of Hope is committed to a safe learning environment free from abuse, harassment and exploitation, especially for minors and vulnerable learners.\n\n2. REPORTING\n2.1 Report concerns to any teacher, the registrar, or afrohope033@gmail.com / +231776679963. Anonymous reports are accepted.\n2.2 All reports are logged and reviewed within 48 hours. Urgent-risk cases are escalated same-day.\n2.3 Retaliation against anyone who reports in good faith is itself misconduct.\n\n3. STAFF DUTIES\nStaff never meet a minor alone behind closed doors, never request personal favours, and refer disclosures to the safeguarding lead immediately.\n\n4. SUPPORT\nCounselling referrals, timetable adjustments and confidential follow-up are available to affected students.`,
+    body: `1. COMMITMENT\nAfrica of Hope is committed to a safe learning environment free from abuse, harassment and exploitation, especially for minors and vulnerable learners.\n\n2. REPORTING\n2.1 Report concerns to any instructor, the registrar, or afrohope033@gmail.com / +231776679963. Anonymous reports are accepted.\n2.2 All reports are logged and reviewed within 48 hours. Urgent-risk cases are escalated same-day.\n2.3 Retaliation against anyone who reports in good faith is itself misconduct.\n\n3. STAFF DUTIES\nStaff never meet a minor alone behind closed doors, never request personal favours, and refer disclosures to the safeguarding lead immediately.\n\n4. SUPPORT\nCounselling referrals, timetable adjustments and confidential follow-up are available to affected students.`,
   },
   {
     id: "examinations-certification", slug: "examinations-certification",
@@ -98,7 +98,7 @@ export const DEFAULT_POLICIES: SchoolPolicy[] = [
     title: "Health, Safety & Campus Policy", category: "Welfare", version: 1,
     effectiveDate: "2025-09-01", isPublished: true, requiresAcceptance: false, sort: 90,
     summary: "Campus safety, emergencies, health and facility use.",
-    body: `1. CAMPUS SAFETY\nFollow staff instructions during drills and emergencies. Report hazards, broken equipment and suspicious persons immediately.\n\n2. HEALTH\nIll students should stay home and inform the cohort teacher. First aid is available at the registrar's office; serious cases are referred to the nearest clinic.\n\n3. FACILITIES\nUse labs, equipment and the library as instructed. Food and drink stay out of computer labs. Damaged items must be reported; wilful damage is charged.\n\n4. VISITORS\nVisitors sign in at reception. Students are responsible for their guests' conduct.`,
+    body: `1. CAMPUS SAFETY\nFollow staff instructions during drills and emergencies. Report hazards, broken equipment and suspicious persons immediately.\n\n2. HEALTH\nIll students should stay home and inform the cohort instructor. First aid is available at the registrar's office; serious cases are referred to the nearest clinic.\n\n3. FACILITIES\nUse labs, equipment and the library as instructed. Food and drink stay out of computer labs. Damaged items must be reported; wilful damage is charged.\n\n4. VISITORS\nVisitors sign in at reception. Students are responsible for their guests' conduct.`,
   },
   {
     id: "online-learning-ict", slug: "online-learning-ict",

@@ -179,7 +179,7 @@ function NewAppealDialog({ onCreated }: { onCreated: (reason: string) => void })
       <DialogContent className="max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Appeal a grade</DialogTitle>
-          <DialogDescription>Pick one of your marked assignments or quiz attempts, then explain why the mark should be reconsidered. Your teacher or school administrator reviews it.</DialogDescription>
+          <DialogDescription>Pick one of your marked assignments or quiz attempts, then explain why the mark should be reconsidered. Your instructor or school administrator reviews it.</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
           {error && <p role="alert" className="rounded-xl bg-rose-50 p-4 text-sm text-rose-800">{error} <button type="button" className="font-semibold underline" onClick={() => void reload()}>Retry</button></p>}
