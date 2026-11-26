@@ -80,7 +80,7 @@ export default function RolesPermissions() {
                     key={role}
                     className="px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-500"
                   >
-                    {role}
+                    {displayRole(role)}
                   </th>
                 ))}
               </tr>
@@ -159,7 +159,7 @@ export default function RolesPermissions() {
               data-component-id={`roles-reset-${role.toLowerCase().replace(/\s+/g, "-")}`}
             >
               <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
-              Reset {role}
+              Reset {displayRole(role)}
             </Button>
           ))}
         </div>

@@ -140,7 +140,7 @@ export default function TermReportCards() {
         { cohort_id: cohortId, student_id: sid, term, comment: value },
         { onConflict: "cohort_id,student_id,term" },
       );
-      toast.success("Teachers-Instructors comment saved");
+      toast.success("Instructors comment saved");
     } catch {
       toast.success("Comment kept on this device — syncs after migration.");
     }
@@ -151,7 +151,7 @@ export default function TermReportCards() {
   if (visibleCohorts.length === 0) {
     return (
       <div className="space-y-5">
-        <SectionHeader title="Term report cards" subtitle="Printable results with totals, grades and Teachers-Instructors comments" />
+        <SectionHeader title="Term report cards" subtitle="Printable results with totals, grades and Instructors comments" />
         <EmptyState icon={Award} title="No cohorts yet" hint={isStudent ? "Your report card appears once you join a cohort." : "Report cards unlock once a cohort exists."} />
       </div>
     );
@@ -259,12 +259,12 @@ export default function TermReportCards() {
                 </table>
                 <p className="mt-3 text-sm font-semibold">Total: {preview.possible > 0 ? `${preview.obtained}/${preview.possible}` : "—"}</p>
                 <div className="mt-3 rounded-lg bg-emerald-50/60 p-3">
-                  <p className="text-xs font-bold uppercase tracking-wide text-emerald-800">Teachers-Instructors comment</p>
+                  <p className="text-xs font-bold uppercase tracking-wide text-emerald-800">Instructors comment</p>
                   <p className="mt-1 text-sm">{preview.comment || "No comment recorded yet."}</p>
                 </div>
                 {!isStudent && (
                   <div className="no-print mt-3 space-y-1.5">
-                    <Label htmlFor="report-comment">Edit Teachers-Instructors comment</Label>
+                    <Label htmlFor="report-comment">Edit Instructors comment</Label>
                     <Textarea
                       id="report-comment"
                       defaultValue={preview.comment}
@@ -276,7 +276,7 @@ export default function TermReportCards() {
                   </div>
                 )}
                 <div className="mt-6 flex justify-between text-xs text-slate-500">
-                  <span>Class Teachers-Instructors: __________________</span>
+                  <span>Class Instructors: __________________</span>
                   <span>Director: __________________</span>
                 </div>
               </div>

@@ -51,7 +51,7 @@ const sampleReport = (school: string): Report => ({
   ],
   teacherComment: "Amara is attentive and consistent. Keep practising written reports to lift the exam score further.",
   principalComment: "A strong term. We are proud of your progress.",
-  teacher: "Class Teacher-Instructor",
+  teacher: "Class Instructor",
   principal: "Director of Education",
 });
 
@@ -238,14 +238,14 @@ export default function GradeSheetSamples() {
             <Field label="Attendance" value={report.attendance} onChange={(v) => setReport({ ...report, attendance: v })} />
             <Field label="Pass mark" value={`${state.settings.passMark}%`} onChange={() => undefined} />
           </div>
-          {([["Teacher-Instructor's comment", "teacherComment"], ["Director's comment", "principalComment"]] as const).map(([l, k]) => (
+          {([["Instructor's comment", "teacherComment"], ["Director's comment", "principalComment"]] as const).map(([l, k]) => (
             <label key={k} className="mt-3 block">
               <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{l}</span>
               <textarea rows={2} className={cn(plain, "resize-none")} value={report[k]} onChange={(e) => setReport({ ...report, [k]: e.currentTarget.value })} />
             </label>
           ))}
           <div className="mt-10 grid grid-cols-2 gap-8 text-xs">
-            <div className="border-t border-slate-400 pt-1"><input aria-label="Teacher label" className={plain} value={report.teacher} onChange={(e) => setReport({ ...report, teacher: e.currentTarget.value })} /></div>
+            <div className="border-t border-slate-400 pt-1"><input aria-label="Instructor label" className={plain} value={report.teacher} onChange={(e) => setReport({ ...report, teacher: e.currentTarget.value })} /></div>
             <div className="border-t border-slate-400 pt-1"><input aria-label="Director label" className={cn(plain, "text-right")} value={report.principal} onChange={(e) => setReport({ ...report, principal: e.currentTarget.value })} /></div>
           </div>
         </div>

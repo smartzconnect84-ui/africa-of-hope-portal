@@ -95,7 +95,7 @@ export default function BroadcastAdmin() {
       ) : list.length === 0 ? (
         <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
           <p className="font-semibold text-slate-800">No broadcasts yet</p>
-          <p className="mt-1 text-sm text-slate-500">Create one to show a popup to students, teachers or staff.</p>
+          <p className="mt-1 text-sm text-slate-500">Create one to show a popup to students, instructors or staff.</p>
         </div>
       ) : (
         <ul className="space-y-3">

@@ -111,7 +111,7 @@ const CORE_ROLE_GUIDE: StaffRoleGuide[] = [
     role: "Teacher",
     mission: "Teaches cohorts: attendance, assignments, quizzes, grade evaluation, report cards and training materials.",
     modules: ["Dashboard", "Attendance Sheet", "Assignments inbox", "Quizzes", "Grade Evaluation", "Report cards", "Training Library", "Discussions"],
-    accountsNote: "Create via Staff & Students → Add staff, then assign as cohort teacher.",
+    accountsNote: "Create via Staff & Students → Add staff, then assign as cohort instructor.",
   },
   {
     role: "Registrar",

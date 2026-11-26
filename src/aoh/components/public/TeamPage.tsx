@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { displayRole } from "@/aoh/lib/roleDisplay";
 import { ArrowRight, Users } from "lucide-react";
 import { useApp } from "@/aoh/context/AppContext";
 import type { WebsiteSettings } from "@/aoh/types";
@@ -35,7 +36,7 @@ export function TeamProfiles({ team }: { team: WebsiteSettings["team"] }) {
                 <TeamPortrait member={member} featured={featured} />
                 <div className={`min-w-0 ${featured ? "flex flex-col justify-center p-6 sm:p-10" : "p-6"}`}>
                   <h2 className={`break-words font-bold text-emerald-950 ${featured ? "text-2xl sm:text-3xl" : "text-xl"}`}>{member.name}</h2>
-                  {member.role && <p className="mt-3 break-words text-sm font-bold uppercase tracking-wider text-emerald-700">{member.role}</p>}
+                  {member.role && <p className="mt-3 break-words text-sm font-bold uppercase tracking-wider text-emerald-700">{displayRole(member.role)}</p>}
                   {member.bio && <p className="mt-5 whitespace-pre-line break-words text-base leading-8 text-black">{member.bio}</p>}
                 </div>
               </article>

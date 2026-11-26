@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Info, Languages, Pin, Search, Star, Users, X } from "lucide-react";
+import { ArrowLeft, ImagePlus, Info, Languages, Pin, Search, Star, Trash2, Users, X } from "lucide-react";
+import { toast } from "sonner";
+import { clearChatBackground, loadDmBackground, setChatBackground } from "@/aoh/lib/chatBackground";
 import { TRANSLATE_LANGUAGES, setTranslatePref, useTranslatePref } from "@/aoh/lib/translate";
 import UserAvatar from "@/aoh/components/UserAvatar";
 import { cn } from "@/aoh/lib/utils";
@@ -84,6 +86,20 @@ export default function ConversationPane({
   const [query, setQuery] = useState("");
   const [starredOnly, setStarredOnly] = useState(false);
   const [flashId, setFlashId] = useState<string | null>(null);
+
+  const [dmBg, setDmBg] = useState<string>("");
+  const [bgOverride, setBgOverride] = useState<string | null>(null);
+  useEffect(() => {
+    setBgOverride(null);
+    setDmBg("");
+    if (conversation.kind !== "dm" || !conversation.peerId || !meId) return;
+    let alive = true;
+    const load = () => void loadDmBackground(meId, conversation.peerId!).then((u) => alive && setDmBg(u || ""));
+    load();
+    const t = window.setInterval(load, 30000);
+    return () => { alive = false; window.clearInterval(t); };
+  }, [conversation.key, conversation.kind, conversation.peerId, meId]);
+  const wallpaper = bgOverride !== null ? bgOverride : conversation.backgroundUrl || dmBg || "";
 
   const scroller = useRef<HTMLDivElement>(null);
   const bottom = useRef<HTMLDivElement>(null);
@@ -300,6 +316,7 @@ export default function ConversationPane({
             </span>
           </span>
         </button>
+        <BackgroundMenu conversation={conversation} meId={meId} hasBackground={!!wallpaper} onChange={setBgOverride} />
         <TranslateMenu />
         <button
           type="button"
@@ -387,8 +404,8 @@ export default function ConversationPane({
         ref={scroller}
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-3 sm:px-6"
         style={{
-          backgroundImage: conversation.backgroundUrl ? `url(${conversation.backgroundUrl})` : WALLPAPER,
-          backgroundSize: conversation.backgroundUrl ? "cover" : "120px 120px",
+          backgroundImage: wallpaper ? `url(${wallpaper})` : WALLPAPER,
+          backgroundSize: wallpaper ? "cover" : "120px 120px",
           backgroundPosition: "center",
         }}
       >
@@ -534,6 +551,81 @@ function TranslateMenu() {
               Translate incoming messages automatically
             </label>
             <p className="text-[11px] text-slate-500">Or open a message menu and choose Translate.</p>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function BackgroundMenu({
+  conversation,
+  meId,
+  hasBackground,
+  onChange,
+}: {
+  conversation: Conversation;
+  meId: string;
+  hasBackground: boolean;
+  onChange: (url: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const target = { kind: conversation.kind, peerId: conversation.peerId, groupId: conversation.groupId };
+  const upload = async (file: File | undefined) => {
+    if (!file) return;
+    setBusy(true);
+    try {
+      onChange(await setChatBackground(target, meId, file));
+      toast.success(conversation.kind === "group" ? "Background updated for the whole group" : "Background updated for both of you");
+      setOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not set the background.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  const remove = async () => {
+    setBusy(true);
+    try {
+      await clearChatBackground(target, meId);
+      onChange("");
+      toast.success("Background removed");
+      setOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not remove the background.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Chat background"
+        aria-expanded={open}
+        title="Chat background"
+        className="grid h-9 w-9 place-items-center rounded-full text-slate-600 hover:bg-black/5"
+      >
+        <ImagePlus className="h-[18px] w-[18px]" />
+      </button>
+      {open && (
+        <>
+          <button type="button" aria-label="Close background menu" className="fixed inset-0 z-30 cursor-default" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-10 z-40 w-64 space-y-2 rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-xl">
+            <p className="text-xs text-slate-500">
+              {conversation.kind === "group" ? "Everyone in this group will see the new background." : "Both of you will see the new background."}
+            </p>
+            <label className={cn("flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg bg-[#075e54] px-3 font-semibold text-white hover:bg-[#054d45]", busy && "pointer-events-none opacity-60")}>
+              <ImagePlus className="h-4 w-4" /> {busy ? "Uploading…" : "Upload a photo"}
+              <input type="file" accept="image/*" className="sr-only" onChange={(e) => { const input = e.currentTarget; const f = input.files?.[0]; input.value = ""; void upload(f); }} />
+            </label>
+            {hasBackground && (
+              <button type="button" disabled={busy} onClick={() => void remove()} className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 font-medium text-rose-600 hover:bg-rose-50">
+                <Trash2 className="h-4 w-4" /> Remove background
+              </button>
+            )}
           </div>
         </>
       )}

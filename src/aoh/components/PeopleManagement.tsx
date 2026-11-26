@@ -183,7 +183,7 @@ function StaffTab({ currentUser, isSuperAdmin }: { currentUser: User | null; isS
               <SelectItem value="All">All roles</SelectItem>
               {STAFF_ROLES.map((r) => (
                 <SelectItem key={r} value={r}>
-                  {r}
+                  {displayRole(r)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -254,7 +254,7 @@ function StaffTab({ currentUser, isSuperAdmin }: { currentUser: User | null; isS
                           <SelectContent>
                             {roleOptions.map((r) => (
                               <SelectItem key={r} value={r}>
-                                {r}
+                                {displayRole(r)}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -462,7 +462,7 @@ function AddStaffDialog({
                     role === r ? "border-emerald-600 bg-emerald-50 text-emerald-800" : "border-slate-200 text-slate-600 hover:bg-slate-50",
                   )}
                 >
-                  {r}
+                  {displayRole(r)}
                 </button>
               ))}
             </div>
