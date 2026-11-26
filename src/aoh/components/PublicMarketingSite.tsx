@@ -758,13 +758,15 @@ export default function PublicMarketingSite({ onEnterPortal }: { onEnterPortal: 
           </div>
         </div>
         <div className="border-t border-slate-200">
-          <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-4 text-center text-[13px] leading-relaxed text-slate-500 sm:flex-row sm:gap-x-6 sm:gap-y-2 sm:px-6 sm:py-5 sm:text-left sm:text-sm md:gap-x-8">
-            <p className="max-w-full sm:max-w-[60%]">{w.footerCopyright || `© ${new Date().getFullYear()} ${displayName}. Accreditation ${settings.accreditationNo}.`}</p>
-            <p className="inline-flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 sm:justify-end">
-              <a href="/cookies" className="underline decoration-slate-300 underline-offset-2 transition hover:text-emerald-800">Cookies</a>
-              <a href="/policies" className="underline decoration-slate-300 underline-offset-2 transition hover:text-emerald-800">Policies</a>
-              <span className="inline-flex items-center gap-1.5"><Globe className="h-3.5 w-3.5 text-emerald-700" /> {settings.academicYear} / {settings.semester}</span>
-            </p>
+          <div className="mx-auto flex max-w-7xl flex-col items-center gap-3 px-4 py-5 text-center text-[13px] leading-relaxed text-slate-500 sm:px-6 md:flex-row md:justify-between md:gap-6 md:text-left lg:px-8">
+            <p className="max-w-2xl text-balance md:flex-1">{w.footerCopyright || `© ${new Date().getFullYear()} ${displayName}. Accreditation ${settings.accreditationNo}.`}</p>
+            <div className="flex w-full flex-col items-center gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-5 md:shrink-0 md:justify-end">
+              <span className="inline-flex items-center gap-4">
+                <a href="/cookies" className="inline-flex min-h-9 items-center underline decoration-slate-300 underline-offset-2 transition hover:text-emerald-800">Cookies</a>
+                <a href="/policies" className="inline-flex min-h-9 items-center underline decoration-slate-300 underline-offset-2 transition hover:text-emerald-800">Policies</a>
+              </span>
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800"><Globe className="h-3.5 w-3.5" /> {settings.academicYear} / {settings.semester}</span>
+            </div>
           </div>
         </div>
       </footer>
