@@ -56,3 +56,22 @@ export async function kvSave(key: string, value: unknown): Promise<KvSaveResult>
     return { shared: false, error: err instanceof Error ? err.message : "Could not reach the database." };
   }
 }
+
+/** Reads every shared entry whose key starts with the prefix (falls back to this browser). */
+export async function kvList<T>(prefix: string): Promise<Record<string, T>> {
+  const out: Record<string, T> = {};
+  try {
+    const { data, error } = await supabase.from("portal_kv").select("key,value").like("key", `${prefix}%`);
+    if (!error && data) {
+      for (const row of data) { out[row.key as string] = row.value as T; writeLocal(row.key as string, row.value); }
+      return out;
+    }
+  } catch { /* table missing or offline */ }
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(PREFIX + prefix)) out[k.slice(PREFIX.length)] = JSON.parse(localStorage.getItem(k) || "null") as T;
+    }
+  } catch { /* storage blocked */ }
+  return out;
+}

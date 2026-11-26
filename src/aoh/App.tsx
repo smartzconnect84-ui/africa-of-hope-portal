@@ -129,6 +129,8 @@ function Portal({ onExitToPublic, initialTab }: { onExitToPublic: () => void; in
       } catch { /* sessionStorage may be unavailable */ }
       setView("helpdesk");
     };
+    const openView = (e: Event) => { const v = (e as CustomEvent<string>).detail; if (typeof v === "string" && v) setView(v); };
+    window.addEventListener("aoh-open-view", openView);
     const appeals = () => setView("grade-appeals");
     const donate = () => setView("donate");
     window.addEventListener("aoh-resume-learning", resume);
@@ -140,6 +142,7 @@ function Portal({ onExitToPublic, initialTab }: { onExitToPublic: () => void; in
       window.removeEventListener("aoh-resume-learning", resume);
       window.removeEventListener("aoh-push-navigate", pushNav);
       window.removeEventListener("aoh-open-helpdesk", helpdesk);
+      window.removeEventListener("aoh-open-view", openView);
       window.removeEventListener("aoh-open-appeals", appeals);
       window.removeEventListener("aoh-open-donate", donate);
     };

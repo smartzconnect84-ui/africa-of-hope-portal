@@ -92,6 +92,7 @@ const GradeSheetSamples = lazy(() => import("./components/academic/GradeSheetSam
 const FinanceDocuments = lazy(() => import("./components/finance/FinanceDocuments"));
 const BroadcastAdmin = lazy(() => import("./components/admin/BroadcastAdmin"));
 const PortalGuide = lazy(() => import("./components/guide/PortalGuide"));
+const CohortLearning = lazy(() => import("./components/academic/CohortLearning"));
 const CohortTimetable = lazy(() => import("./components/academic/CohortTimetable"));
 const ReferenceLetters = lazy(() => import("./components/portal/ReferenceLetters"));
 const EntranceTest = lazy(() => import("./components/portal/EntranceTest"));
@@ -387,6 +388,13 @@ export const PORTAL_VIEWS: PortalView[] = [
     render: (ctx) => (ctx.role === "Student" ? <AssignmentsView /> : <GradeEvaluation />),
   },
   {
+    key: "cohort-learning",
+    label: (ctx) => (ctx.role === "Student" ? "My Cohorts" : "Cohort Learning"),
+    icon: GraduationCap,
+    visible: (ctx) => ctx.role === "Student" || ctx.role === "Teacher" || ctx.canAny("cohorts.manage", "academic_plans.manage", "academic_plans.approve"),
+    render: (ctx) => <CohortLearning canManage={ctx.can("cohorts.manage")} />,
+  },
+  {
     key: "timetable",
     label: "Timetable",
     icon: CalendarDays,
@@ -641,6 +649,7 @@ export const PORTAL_NAV_GROUPS: { id: string; label: string; keys: string[] }[] 
       "academic-planning",
       "study-plan",
       "study-calendar",
+      "cohort-learning",
       "self-paced",
       "study-materials",
       "assignments",
