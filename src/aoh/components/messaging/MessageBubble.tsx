@@ -7,6 +7,7 @@ import {
   Download,
   FileText,
   Forward,
+  Languages,
   MoreHorizontal,
   Pause,
   Pencil,
@@ -17,6 +18,8 @@ import {
   Trash2,
 } from "lucide-react";
 import UserAvatar from "@/aoh/components/UserAvatar";
+import { toast } from "sonner";
+import { TRANSLATE_LANGUAGES, translateText, useTranslatePref } from "@/aoh/lib/translate";
 import { cn } from "@/aoh/lib/utils";
 import { formatVoiceTime, useSignedUrl, type Message } from "@/aoh/lib/messaging";
 import type { User } from "@/aoh/types";
@@ -182,6 +185,26 @@ export default function MessageBubble({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [tools, setTools] = useState(false);
+  const pref = useTranslatePref();
+  const [translation, setTranslation] = useState<string | null>(null);
+  const [translating, setTranslating] = useState(false);
+  const [wantTranslation, setWantTranslation] = useState(false);
+  const runTranslate = async (silent = false) => {
+    setTranslating(true);
+    try {
+      setTranslation(await translateText(message.body, pref.target));
+    } catch (err) {
+      setWantTranslation(false);
+      if (!silent) toast.error(err instanceof Error ? err.message : "Could not translate this message.");
+    } finally {
+      setTranslating(false);
+    }
+  };
+  useEffect(() => {
+    setTranslation(null);
+    if (message.body.trim() && !message.deleted_at && (wantTranslation || (pref.auto && !mine))) void runTranslate(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pref.target, pref.auto, wantTranslation, message.body]);
   const pressTimer = useRef<number | undefined>(undefined);
   const deleted = !!message.deleted_at;
   const cancelPress = () => window.clearTimeout(pressTimer.current);
@@ -197,7 +220,7 @@ export default function MessageBubble({
       {!mine && (
         <div className="w-7 shrink-0 self-end">
           {showAvatar && sender && (
-            <UserAvatar user={{ name: sender.name, avatarUrl: sender.avatarUrl }} className="h-7 w-7 text-[10px]" />
+            <UserAvatar user={{ id: sender.id, name: sender.name, avatarUrl: sender.avatarUrl }} className="h-7 w-7 text-[10px]" />
           )}
         </div>
       )}
@@ -275,6 +298,9 @@ export default function MessageBubble({
                 { label: "Reply", icon: Reply, run: () => actions.onReply(message) },
                 { label: "Copy text", icon: Copy, run: () => actions.onCopy(message) },
                 ...(message.body.trim()
+                  ? [{ label: translation ? "Show original" : "Translate", icon: Languages, run: () => { if (translation) { setWantTranslation(false); setTranslation(null); } else setWantTranslation(true); } }]
+                  : []),
+                ...(message.body.trim()
                   ? [{ label: "Forward", icon: Forward, run: () => actions.onForward(message) }]
                   : []),
                 { label: message.starred ? "Remove star" : "Star message", icon: Star, run: () => actions.onStar(message) },
@@ -345,6 +371,12 @@ export default function MessageBubble({
               {message.body.trim() && (
                 <p className="whitespace-pre-wrap break-words leading-relaxed">
                   {highlight(message.body, query)}
+                </p>
+              )}
+              {message.body.trim() && (translating || translation) && (
+                <p className="mt-1 whitespace-pre-wrap break-words border-t border-black/10 pt-1 text-[13px] italic leading-relaxed text-slate-700">
+                  <span className="mr-1 inline-flex items-center gap-0.5 text-[10px] font-semibold not-italic text-emerald-700"><Languages className="h-3 w-3" />{TRANSLATE_LANGUAGES.find((l) => l.code === pref.target)?.label ?? pref.target}</span>
+                  {translating && !translation ? "Translating…" : translation}
                 </p>
               )}
             </>

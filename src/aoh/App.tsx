@@ -18,6 +18,9 @@ const PublicMarketingSite = lazy(() => import("./components/PublicMarketingSite"
 import AuthPortal, { PasswordRecoveryDialog, type AuthTab } from "./components/AuthPortal";
 import OfflineBanner from "./components/pwa/OfflineBanner";
 import LivePushHost from "./components/LivePushHost";
+import BroadcastHost from "./components/BroadcastHost";
+import ProfileHost from "./components/ProfileHost";
+import LongPressDeleteHost from "./components/LongPressDeleteHost";
 import PortalAnnouncementTicker from "./components/portal/PortalAnnouncementTicker";
 import KnockProviderShell from "./components/notifications/KnockProviderShell";
 // Production perf: below-the-fold extras load lazily so first paint on
@@ -256,6 +259,9 @@ function Shell() {
         <Portal onExitToPublic={() => setSite("public")} initialTab={authTab} />
       )}
       <LivePushHost />
+      <BroadcastHost />
+      <ProfileHost />
+      <LongPressDeleteHost />
       <Suspense fallback={null}>
         <CurrencyConverter />
       </Suspense>

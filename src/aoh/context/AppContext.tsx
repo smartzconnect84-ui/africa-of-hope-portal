@@ -363,7 +363,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
         if (!data.user) return "The server did not create a sign-in session. Please retry.";
         // Auth events establish identity and trigger a fresh, isolated read.
-        toast.success("Welcome back to the portal.");
         return null;
       },
       logout: () => {

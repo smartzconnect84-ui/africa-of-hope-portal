@@ -151,7 +151,7 @@ function ProfileHeader({ user }: { user: User }) {
       </div>
       <div className="flex flex-col gap-4 px-5 pb-5 sm:flex-row sm:items-end sm:px-6">
         <div className="relative -mt-14 w-fit">
-          <UserAvatar user={shown} className="h-28 w-28 border-4 border-white text-2xl shadow-lg" />
+          <UserAvatar noProfile user={shown} className="h-28 w-28 border-4 border-white text-2xl shadow-lg" />
           {busy && (
             <span className="absolute inset-1 grid place-items-center rounded-full bg-black/45">
               <Loader2 className="h-6 w-6 animate-spin text-white" />

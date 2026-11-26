@@ -698,7 +698,7 @@ export default function Navigation({
               )}
             >
               {currentUser ? (
-                <UserAvatar user={currentUser} className="h-9 w-9 text-xs ring-2 ring-emerald-700/10" />
+                <UserAvatar noProfile user={currentUser} className="h-9 w-9 text-xs ring-2 ring-emerald-700/10" />
               ) : (
                 <span className="grid h-9 w-9 place-items-center rounded-full bg-emerald-800 text-xs font-semibold text-amber-400">AO</span>
               )}

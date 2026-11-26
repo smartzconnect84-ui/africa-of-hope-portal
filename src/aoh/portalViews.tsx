@@ -35,6 +35,8 @@ import {
   FileText,
   Lightbulb,
   MessageSquare,
+  Headphones,
+  Radio,
   type LucideIcon,
 } from "lucide-react";
 import { useApp } from "./context/AppContext";
@@ -86,6 +88,10 @@ const TransparencyLibrary = lazy(() => import("./components/public/TransparencyL
 const Helpdesk = lazy(() => import("./components/portal/Helpdesk"));
 const GradeAppeals = lazy(() => import("./components/portal/GradeAppeals"));
 const TermReportCards = lazy(() => import("./components/academic/TermReportCards"));
+const GradeSheetSamples = lazy(() => import("./components/academic/GradeSheetSamples"));
+const FinanceDocuments = lazy(() => import("./components/finance/FinanceDocuments"));
+const BroadcastAdmin = lazy(() => import("./components/admin/BroadcastAdmin"));
+const PortalGuide = lazy(() => import("./components/guide/PortalGuide"));
 const CohortTimetable = lazy(() => import("./components/academic/CohortTimetable"));
 const ReferenceLetters = lazy(() => import("./components/portal/ReferenceLetters"));
 const EntranceTest = lazy(() => import("./components/portal/EntranceTest"));
@@ -507,6 +513,34 @@ export const PORTAL_VIEWS: PortalView[] = [
     render: () => <EmailOutboxPanel />,
   },
   {
+    key: "grade-templates",
+    label: "Report & Grade Sheets",
+    icon: NotebookPen,
+    visible: (ctx) => ctx.role === "Student" || ctx.canAny("assignments.manage", "assignments.own", "reports.manage", "grades.manage"),
+    render: () => <GradeSheetSamples />,
+  },
+  {
+    key: "finance-documents",
+    label: "Invoices & Receipts",
+    icon: FileText,
+    visible: (ctx) => ctx.canAny("fees.view", "fees.manage") || ctx.role === "Student",
+    render: () => <FinanceDocuments />,
+  },
+  {
+    key: "broadcasts",
+    label: "Live Broadcasts",
+    icon: Radio,
+    visible: (ctx) => ctx.role === "Super Admin" || ctx.role === "School Admin" || ctx.can("settings.manage"),
+    render: () => <BroadcastAdmin />,
+  },
+  {
+    key: "guide",
+    label: "Portal Guide",
+    icon: Headphones,
+    visible: () => true,
+    render: () => <PortalGuide />,
+  },
+  {
     key: "profile",
     label: "My Profile",
     icon: UserCircle,
@@ -614,12 +648,13 @@ export const PORTAL_NAV_GROUPS: { id: string; label: string; keys: string[] }[] 
       "training-library",
       "timetable",
       "report-cards",
+      "grade-templates",
     ],
   },
   {
     id: "finance",
     label: "Finance & Records",
-    keys: ["fees", "payments", "payment-review", "certificates", "verification"],
+    keys: ["fees", "finance-documents", "payments", "payment-review", "certificates", "verification"],
   },
   {
     id: "community",
@@ -629,6 +664,6 @@ export const PORTAL_NAV_GROUPS: { id: string; label: string; keys: string[] }[] 
   {
     id: "system",
     label: "System & Resources",
-    keys: ["my-files", "operations", "website", "email-outbox", "notification-admin", "settings", "notification-settings", "profile"],
+    keys: ["my-files", "operations", "website", "email-outbox", "notification-admin", "broadcasts", "settings", "notification-settings", "guide", "profile"],
   },
 ];

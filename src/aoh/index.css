@@ -1154,3 +1154,17 @@ html .aoh-public .aoh-text-secondary.aoh-text-secondary { color: var(--secondary
   .home-block > section > div > .mx-auto { padding-inline: 2rem; }
 }
 .home-block section h2 { text-wrap: balance; }
+
+/* Printable finance documents and report sheets (portrait A4) */
+@page doc-portrait { size: A4 portrait; margin: 12mm; }
+@media print {
+  .doc-portrait { page: doc-portrait; }
+}
+
+/* Long-press delete feedback */
+.lp-arming {
+  outline: 2px solid rgb(225 29 72 / 0.7);
+  outline-offset: 2px;
+  background-image: linear-gradient(rgb(225 29 72 / 0.08), rgb(225 29 72 / 0.08));
+  transition: outline-color 0.2s;
+}

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Info, Pin, Search, Star, Users, X } from "lucide-react";
+import { ArrowLeft, Info, Languages, Pin, Search, Star, Users, X } from "lucide-react";
+import { TRANSLATE_LANGUAGES, setTranslatePref, useTranslatePref } from "@/aoh/lib/translate";
 import UserAvatar from "@/aoh/components/UserAvatar";
 import { cn } from "@/aoh/lib/utils";
 import {
@@ -299,6 +300,7 @@ export default function ConversationPane({
             </span>
           </span>
         </button>
+        <TranslateMenu />
         <button
           type="button"
           onClick={() => setSearchOpen((open) => !open)}
@@ -492,5 +494,49 @@ export default function ConversationPane({
         error={localError ?? thread.error}
       />
     </section>
+  );
+}
+
+function TranslateMenu() {
+  const pref = useTranslatePref();
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Translate messages"
+        aria-expanded={open}
+        aria-pressed={pref.auto}
+        title="Translate messages"
+        className={cn("grid h-9 w-9 place-items-center rounded-full text-slate-600 hover:bg-black/5", pref.auto && "bg-emerald-100 text-emerald-800")}
+      >
+        <Languages className="h-[18px] w-[18px]" />
+      </button>
+      {open && (
+        <>
+          <button type="button" aria-label="Close translate menu" className="fixed inset-0 z-30 cursor-default" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-10 z-40 w-60 space-y-3 rounded-xl border border-slate-200 bg-white p-3 text-sm shadow-xl">
+            <label className="block">
+              <span className="mb-1 block text-xs font-semibold text-slate-500">Translate into</span>
+              <select
+                className="h-9 w-full rounded-md border border-slate-300 bg-white px-2 text-sm"
+                value={pref.target}
+                onChange={(e) => setTranslatePref({ target: e.currentTarget.value })}
+              >
+                {TRANSLATE_LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code}>{l.label}</option>
+                ))}
+              </select>
+            </label>
+            <label className="flex items-center gap-2 text-slate-700">
+              <input type="checkbox" checked={pref.auto} onChange={(e) => setTranslatePref({ auto: e.currentTarget.checked })} />
+              Translate incoming messages automatically
+            </label>
+            <p className="text-[11px] text-slate-500">Or open a message menu and choose Translate.</p>
+          </div>
+        </>
+      )}
+    </div>
   );
 }
