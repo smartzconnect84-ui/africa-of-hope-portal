@@ -171,10 +171,10 @@ export default function HeroSlider({ onOpenApply, onEnterPortal }: HeroSliderPro
 
   const idx = current % safeSlides.length;
   const facts = [
-    { icon: GraduationCap, value: "31", label: "Certificate programmes" },
-    { icon: BadgeCheck, value: "100%", label: "Verifiable certificates" },
-    { icon: HeartHandshake, value: "Non-profit", label: "Mission-led school" },
-    { icon: Users, value: "2026/27", label: "Intake now open" },
+    { icon: GraduationCap, value: "31", label: "programmes" },
+    { icon: BadgeCheck, value: "100%", label: "Verifiable" },
+    { icon: HeartHandshake, value: "Non-profit", label: "Mission-LED" },
+    { icon: Users, value: "2026/27", label: "IS open!" },
   ];
 
   return (
@@ -390,7 +390,7 @@ export default function HeroSlider({ onOpenApply, onEnterPortal }: HeroSliderPro
               <div className="min-w-0">
                 <dt className="sr-only">{label}</dt>
                 <dd className="text-lg font-extrabold leading-none text-white sm:text-xl">{value}</dd>
-                <p className="mt-1 truncate text-[11px] font-semibold uppercase tracking-wider text-emerald-200/80">{label}</p>
+                <p className="mt-1 truncate text-[11px] font-semibold uppercase tracking-wider text-emerald-200/80" style={{ fontFamily: "system-ui" }}>{label}</p>
               </div>
             </div>
           ))}
