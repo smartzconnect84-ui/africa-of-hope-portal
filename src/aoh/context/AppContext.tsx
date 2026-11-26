@@ -1023,7 +1023,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       },
       resetDemoData: () => {
         setReloadKey((k) => k + 1);
-        toast.info("Refreshing portal data from the live database…");
+        const id = toast.loading("Refreshing portal data from the live database…");
+        void refresh()
+          .then(() => toast.success("Portal data is up to date.", { id }))
+          .catch(() => toast.error("Could not reach the live database. Check your connection and try again.", { id }));
       },
       adminUsers: async (action, body) => {
         const { data, error } = await supabase.functions.invoke("admin-users", {
