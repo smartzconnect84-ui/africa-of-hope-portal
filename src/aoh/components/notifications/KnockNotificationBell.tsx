@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Bell, CheckCheck, Loader2 } from "lucide-react";
+import { Bell, CheckCheck, Loader2, Trash2 } from "lucide-react";
 import { useKnock, useKnockFeedState } from "./KnockProviderShell";
 
 function plain(html: string): string {
@@ -76,6 +76,14 @@ export default function KnockNotificationBell() {
         <div role="dialog" aria-label="Notifications" className="fixed inset-x-3 top-16 z-50 max-h-[70vh] overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-800 shadow-2xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-96">
           <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
             <p className="text-sm font-semibold">Notifications</p>
+            <button
+              type="button"
+              disabled={items.length === 0}
+              onClick={() => void ctx.feed.markAllAsArchived()}
+              className="ml-auto mr-3 inline-flex items-center gap-1 text-xs font-medium text-rose-600 disabled:opacity-40"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Clear all
+            </button>
             <button type="button" disabled={unread === 0} onClick={() => void ctx.feed.markAllAsRead()} className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 disabled:opacity-40">
               <CheckCheck className="h-3.5 w-3.5" /> Mark all read
             </button>
