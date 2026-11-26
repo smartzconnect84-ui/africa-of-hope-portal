@@ -288,6 +288,11 @@ export interface AuthTestimonial {
 
 export interface AuthSettings {
   showcaseImage: string;
+  /** Sign-in background for tablets and phones (desktop uses the showcase image). */
+  tabletBackground?: string;
+  mobileBackground?: string;
+  /** 10 to 100: how solid the background shows behind the form. */
+  backgroundOpacity?: number;
   eyebrow: string;
   headline: string;
   highlight: string;

@@ -771,6 +771,13 @@ export default function AdminWebsiteSettings() {
           <div className={`${panelClass} grid gap-4 p-5`}>
             <p className="text-sm font-semibold text-slate-700">Showcase panel (left side of the login screen)</p>
             <ImageBox label="Showcase image" folder="auth" value={draft.auth.showcaseImage} onChange={(v) => patchAuth({ showcaseImage: v })} />
+            <ImageBox label="Tablet sign-in background" folder="auth/tablet" value={draft.auth.tabletBackground || ''} onChange={(v) => patchAuth({ tabletBackground: v })} />
+            <ImageBox label="Phone sign-in background" folder="auth/mobile" value={draft.auth.mobileBackground || ''} onChange={(v) => patchAuth({ mobileBackground: v })} />
+            <div className="sm:col-span-2">
+              <label htmlFor="auth-bg-opacity" className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Background transparency: {draft.auth.backgroundOpacity ?? 35}% visible</label>
+              <input id="auth-bg-opacity" type="range" min={10} max={100} step={5} value={draft.auth.backgroundOpacity ?? 35} onChange={(e) => patchAuth({ backgroundOpacity: Number(e.currentTarget.value) })} className="w-full accent-emerald-700" />
+              <p className="mt-1 text-[11px] text-slate-500">Lower values make the picture fainter behind the sign-in form. Desktop keeps its showcase panel.</p>
+            </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Eyebrow" value={draft.auth.eyebrow} onChange={(v) => patchAuth({ eyebrow: v })} />
               <Field label="Headline" value={draft.auth.headline} onChange={(v) => patchAuth({ headline: v })} />

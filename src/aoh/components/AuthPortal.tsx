@@ -987,9 +987,17 @@ export default function AuthPortal({
 
   return (
     <div className="grid min-h-[100dvh] w-full max-w-full grid-cols-[minmax(0,1fr)] overflow-x-hidden bg-[#f6f8f7] lg:grid-cols-2">
+      {(auth.tabletBackground || auth.mobileBackground) && (
+        <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0 lg:hidden" style={{ opacity: (auth.backgroundOpacity ?? 35) / 100 }}>
+          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${auth.mobileBackground || auth.tabletBackground})` }} />
+          {auth.tabletBackground && (
+            <div className="absolute inset-0 hidden bg-cover bg-center sm:block" style={{ backgroundImage: `url(${auth.tabletBackground})` }} />
+          )}
+        </div>
+      )}
       <Showcase />
 
-      <main className="flex min-h-[100dvh] min-w-0 flex-col px-4 py-6 sm:px-8">
+      <main className="relative z-10 flex min-h-[100dvh] min-w-0 flex-col px-4 py-6 sm:px-8">
           <div className="flex items-center">
           {onBackToSite ? (
             <button
