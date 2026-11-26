@@ -1012,6 +1012,7 @@ export default function AuthPortal({
                 tone="light"
                 size="lg"
                 showTagline={false}
+                showName={false}
                 className="mx-auto flex-col gap-1.5 [&_img]:origin-center [&_img]:scale-[1.4]"
                 nameClassName="text-center text-lg font-black normal-case tracking-normal sm:text-xl"
               />
