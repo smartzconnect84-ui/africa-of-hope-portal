@@ -1,0 +1,9 @@
+{
+  "name": "aoh-sites-local-test",
+  "main": "./worker.js",
+  "compatibility_date": "2026-11-26",
+  "assets": {
+    "directory": "../dist/client",
+    "binding": "ASSETS"
+  }
+}

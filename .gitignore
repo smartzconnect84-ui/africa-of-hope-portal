@@ -1,5 +1,7 @@
 node_modules
 dist
+sites/assets
+sites/.wrangler
 .output
 .nitro
 .cache
@@ -15,12 +17,13 @@ dist
 .env
 .env.*
 !.env.example
-supabase
+/supabase/
 .swarmz-restore-failed
 /.swarmz
 
-# Supabase local cache (managed by Swarmz Cloud)
-supabase/
+# Supabase local cache (managed by Swarmz Cloud) — root only; do NOT ignore
+# src/aoh/integrations/supabase/, which is application code.
+/supabase/
 
 .swarmz
 node_modules
