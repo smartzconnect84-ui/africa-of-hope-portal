@@ -60,7 +60,7 @@ export default function ChatList({
       <header className="bg-[#075e54] px-3 pb-3 pt-2 text-white">
         <div className="flex items-center gap-2">
           <UserAvatar
-            user={{ name: currentUser?.name ?? "Me", avatarUrl: currentUser?.avatarUrl }}
+            user={{ id: currentUser?.id, name: currentUser?.name ?? "Me", avatarUrl: currentUser?.avatarUrl }}
             className="h-9 w-9 text-[11px] ring-2 ring-white/30"
           />
           <div className="min-w-0 flex-1">
@@ -195,8 +195,8 @@ export default function ChatList({
                   )}
                 >
                   <span className="relative shrink-0">
-                    <UserAvatar
-                      user={{ name: conversation.name, avatarUrl: conversation.avatarUrl }}
+                    <UserAvatar noProfile
+                      user={{ id: conversation.kind === "dm" ? conversation.peerId : undefined, name: conversation.name, avatarUrl: conversation.avatarUrl }}
                       className="h-11 w-11 text-[13px]"
                     />
                     {conversation.kind === "group" ? (

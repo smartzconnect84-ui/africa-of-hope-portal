@@ -20,6 +20,7 @@ import OfflineBanner from "./components/pwa/OfflineBanner";
 import LivePushHost from "./components/LivePushHost";
 import BroadcastHost from "./components/BroadcastHost";
 import ProfileHost from "./components/ProfileHost";
+import PresenceHost from "./components/PresenceHost";
 import LongPressDeleteHost from "./components/LongPressDeleteHost";
 import PortalAnnouncementTicker from "./components/portal/PortalAnnouncementTicker";
 import KnockProviderShell from "./components/notifications/KnockProviderShell";
@@ -261,6 +262,7 @@ function Shell() {
       <LivePushHost />
       <BroadcastHost />
       <ProfileHost />
+      <PresenceHost />
       <LongPressDeleteHost />
       <Suspense fallback={null}>
         <CurrencyConverter />

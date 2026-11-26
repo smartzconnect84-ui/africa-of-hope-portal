@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { FileText, Pencil, Plus, Printer, ReceiptText, Save, Trash2, UserCheck } from "lucide-react";
+import { FileText, ImagePlus, Pencil, Plus, Printer, ReceiptText, Save, Trash2, UserCheck } from "lucide-react";
+import { imageToDataUrl } from "@/aoh/lib/imageResize";
 import { toast } from "sonner";
 import { formatCurrency, useApp } from "@/aoh/context/AppContext";
 import { usePermission } from "@/aoh/hooks/usePermission";
@@ -22,6 +23,7 @@ interface Template {
   signatory: string;
   signatoryTitle: string;
   dueDays: number;
+  signatureUrl: string;
 }
 interface StudentDoc {
   extra: { id: string; description: string; amount: number }[];
@@ -40,19 +42,38 @@ function Sheet({ children }: { children: ReactNode }) {
   );
 }
 
-function Letterhead({ t, title, number, date }: { t: Template; title: string; number: string; date: string }) {
+function Crest({ logoUrl, name }: { logoUrl: string; name: string }) {
+  const [broken, setBroken] = useState(false);
+  if (logoUrl && !broken)
+    return <img src={logoUrl} alt={`${name} logo`} onError={() => setBroken(true)} className="aoh-logo h-16 w-16 shrink-0 object-contain sm:h-20 sm:w-20" />;
   return (
-    <header className="flex flex-wrap items-start justify-between gap-4 border-b-2 border-emerald-800 pb-4">
-      <div className="min-w-0">
-        <p className="break-words text-xl font-extrabold uppercase tracking-wide text-emerald-900 sm:text-2xl">{t.schoolName}</p>
-        {t.tagline && <p className="text-xs italic text-slate-500">{t.tagline}</p>}
-        <p className="mt-1 whitespace-pre-line break-words text-xs text-slate-600">{t.address}</p>
-        <p className="break-words text-xs text-slate-600">{t.contact}</p>
-      </div>
-      <div className="text-right">
-        <p className="text-2xl font-black tracking-widest text-amber-600 sm:text-3xl">{title}</p>
-        <p className="mt-1 font-mono text-xs text-slate-700">No. {number}</p>
-        <p className="text-xs text-slate-500">Date: {date}</p>
+    <span aria-hidden className="grid h-16 w-16 shrink-0 place-items-center rounded-xl bg-emerald-900 text-xl font-black text-amber-400 sm:h-20 sm:w-20">
+      {name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("") || "A"}
+    </span>
+  );
+}
+
+function Letterhead({ t, logoUrl, title, number, date }: { t: Template; logoUrl: string; title: string; number: string; date: string }) {
+  const lines = t.address.split(/\n|,\s*/).map((l) => l.trim()).filter(Boolean);
+  return (
+    <header className="border-b-2 border-emerald-800 pb-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+          <Crest logoUrl={logoUrl} name={t.schoolName} />
+          <div className="min-w-0">
+            <p className="break-words text-lg font-extrabold uppercase leading-tight tracking-wide text-emerald-900 sm:text-xl">{t.schoolName}</p>
+            {t.tagline && <p className="text-xs italic text-slate-500">{t.tagline}</p>}
+            <address className="mt-1 text-xs not-italic leading-5 text-slate-600">
+              {lines.map((l) => (<span key={l} className="block break-words">{l}</span>))}
+              {t.contact && <span className="block break-words">{t.contact}</span>}
+            </address>
+          </div>
+        </div>
+        <div className="shrink-0 rounded-lg bg-emerald-50 px-4 py-2 text-left sm:bg-transparent sm:p-0 sm:text-right">
+          <p className="text-xl font-black tracking-[0.2em] text-amber-600 sm:text-2xl">{title}</p>
+          <p className="mt-0.5 break-all font-mono text-xs text-slate-700">No. {number}</p>
+          <p className="text-xs text-slate-500">Date: {date}</p>
+        </div>
       </div>
     </header>
   );
@@ -60,12 +81,15 @@ function Letterhead({ t, title, number, date }: { t: Template; title: string; nu
 
 function Signatures({ t }: { t: Template }) {
   return (
-    <div className="mt-10 grid grid-cols-2 gap-8 text-xs text-slate-600">
+    <div className="mt-10 grid grid-cols-1 gap-8 text-xs text-slate-600 sm:grid-cols-2">
       <div className="border-t border-slate-400 pt-1">Received / acknowledged by</div>
-      <div className="border-t border-slate-400 pt-1 text-right">
-        <span className="font-semibold text-slate-800">{t.signatory}</span>
-        <br />
-        {t.signatoryTitle}
+      <div className="flex flex-col sm:items-end sm:text-right">
+        {t.signatureUrl && <img src={t.signatureUrl} alt={`Signature of ${t.signatory}`} className="mb-1 h-14 w-auto max-w-[220px] object-contain object-left sm:object-right" />}
+        <div className="w-full border-t border-slate-400 pt-1 sm:text-right">
+          <span className="font-semibold text-slate-800">{t.signatory}</span>
+          <br />
+          {t.signatoryTitle}
+        </div>
       </div>
     </div>
   );
@@ -89,10 +113,12 @@ export default function FinanceDocuments() {
       signatory: "Finance Office",
       signatoryTitle: s.academyName || "Africa of Hope",
       dueDays: 14,
+      signatureUrl: "",
     }),
     [s.academyName, s.motto, s.address, s.contactEmail, s.contactPhone],
   );
 
+  const logoUrl = state.websiteSettings.logos?.certificate || state.websiteSettings.logoUrl || "";
   const [tab, setTab] = useState<Tab>("invoice");
   const [template, setTemplate] = useState<Template>(defaults);
   const [editing, setEditing] = useState(false);
@@ -254,8 +280,41 @@ export default function FinanceDocuments() {
             <span className="mb-1 block text-xs font-semibold text-slate-600">Discount for this student</span>
             <Input type="number" min={0} value={doc.discount} onChange={(e) => setDoc((d) => ({ ...d, discount: Number(e.currentTarget.value) }))} />
           </label>
+          <div className="sm:col-span-2">
+            <span className="mb-1 block text-xs font-semibold text-slate-600">Signature (PNG or JPG, shown above the signer line)</span>
+            <div className="flex flex-wrap items-center gap-3">
+              {template.signatureUrl ? (
+                <img src={template.signatureUrl} alt="Current signature" className="h-14 w-auto rounded border border-slate-200 bg-white p-1" />
+              ) : (
+                <span className="text-xs text-slate-500">No signature uploaded yet.</span>
+              )}
+              <label className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                <ImagePlus className="h-4 w-4" /> Upload signature
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={async (e) => {
+                    const input = e.currentTarget;
+                    const file = input.files?.[0];
+                    input.value = "";
+                    if (!file) return;
+                    try {
+                      setT("signatureUrl", await imageToDataUrl(file));
+                      toast.success("Signature added. Press Save changes to keep it.");
+                    } catch (err) {
+                      toast.error(err instanceof Error ? err.message : "Could not use that image.");
+                    }
+                  }}
+                />
+              </label>
+              {template.signatureUrl && (
+                <Button type="button" variant="outline" size="sm" onClick={() => setT("signatureUrl", "")}>Remove</Button>
+              )}
+            </div>
+          </div>
           <label className="sm:col-span-2">
-            <span className="mb-1 block text-xs font-semibold text-slate-600">Address</span>
+            <span className="mb-1 block text-xs font-semibold text-slate-600">Address (one line per row, or separate with commas)</span>
             <Textarea rows={2} value={template.address} onChange={(e) => setT("address", e.currentTarget.value)} />
           </label>
           <label className="sm:col-span-2">
@@ -290,7 +349,7 @@ export default function FinanceDocuments() {
         <p className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">No student selected yet.</p>
       ) : tab === "invoice" ? (
         <Sheet>
-          <Letterhead t={template} title="INVOICE" number={`INV-${idLabel}-${year}`} date={fmt(today)} />
+          <Letterhead t={template} logoUrl={logoUrl} title="INVOICE" number={`INV-${idLabel}-${year}`} date={fmt(today)} />
           <section className="mt-5 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <UserAvatar user={student} className="h-12 w-12 text-sm" />
@@ -306,7 +365,7 @@ export default function FinanceDocuments() {
             </div>
           </section>
           <div className="mt-5 overflow-x-auto">
-            <table className="w-full min-w-[420px] text-sm">
+            <table className="w-full min-w-0 text-sm">
               <thead>
                 <tr className="bg-emerald-900 text-left text-xs uppercase tracking-wide text-white">
                   <th className="px-3 py-2">Description</th>
@@ -332,7 +391,7 @@ export default function FinanceDocuments() {
               </tbody>
             </table>
           </div>
-          <dl className="ml-auto mt-4 w-full max-w-xs space-y-1 text-sm">
+          <dl className="mt-4 w-full space-y-1 text-sm sm:ml-auto sm:max-w-xs">
             {doc.discount > 0 && (
               <div className="flex justify-between"><dt>Discount</dt><dd>− {formatCurrency(Number(doc.discount))}</dd></div>
             )}
@@ -347,7 +406,7 @@ export default function FinanceDocuments() {
         </Sheet>
       ) : tab === "slip" ? (
         <Sheet>
-          <Letterhead t={template} title="REGISTRATION SLIP" number={`REG-${idLabel}`} date={fmt(student.joinedDate || today)} />
+          <Letterhead t={template} logoUrl={logoUrl} title="REGISTRATION SLIP" number={`REG-${idLabel}`} date={fmt(student.joinedDate || today)} />
           <section className="mt-6 flex flex-wrap items-center gap-4">
             <UserAvatar user={student} className="h-20 w-20 text-xl" />
             <div className="min-w-0">
@@ -395,7 +454,7 @@ export default function FinanceDocuments() {
         <Sheet>
           {fee ? (
             <>
-              <Letterhead t={template} title="RECEIPT" number={fee.reference || `RCT-${fee.id.slice(0, 8).toUpperCase()}`} date={fmt(fee.date)} />
+              <Letterhead t={template} logoUrl={logoUrl} title="RECEIPT" number={fee.reference || `RCT-${fee.id.slice(0, 8).toUpperCase()}`} date={fmt(fee.date)} />
               <section className="mt-6 rounded-xl bg-emerald-50 p-5 text-center">
                 <p className="text-xs font-bold uppercase tracking-widest text-emerald-800">Amount received</p>
                 <p className="mt-1 text-4xl font-black text-emerald-900">{formatCurrency(fee.amount)}</p>

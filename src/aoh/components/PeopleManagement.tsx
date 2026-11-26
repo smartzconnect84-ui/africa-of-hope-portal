@@ -48,7 +48,7 @@ import {
 } from "@/aoh/components/ui/dropdown-menu";
 import { EmptyState, SectionHeader, panelClass } from "./Navigation";
 import DataTools from "./DataTools";
-import { UserProfileDialog, DirectMessageDialog, PresenceDot } from "./DirectoryMessaging";
+import { UserProfileDialog, DirectMessageDialog } from "./DirectoryMessaging";
 import { usePresence } from "@/aoh/lib/presence";
 import CongratulationsAction from './CongratulationsAction';
 import { supabase } from "@/aoh/integrations/supabase/client";
@@ -230,8 +230,7 @@ function StaffTab({ currentUser, isSuperAdmin }: { currentUser: User | null; isS
                         </span>
                         <div>
                           <button type="button" onClick={() => setViewUser(u)} title={`View ${u.name}'s profile`} className="flex items-center gap-1.5 text-left font-medium text-slate-800 underline-offset-2 hover:text-emerald-800 hover:underline">
-                            <UserAvatar noProfile user={u} className="h-7 w-7 text-[10px]" />
-                            <PresenceDot online={isOnline(u.id)} />
+                            <UserAvatar user={u} className="h-7 w-7 text-[10px]" />
                             {u.name}
                           </button>
                           <p className="max-w-64 break-all font-mono text-[10px] text-emerald-800">ID: {accountId(u)}</p>
@@ -582,7 +581,7 @@ function StudentsTab() {
                         <span className="grid h-9 w-9 place-items-center rounded-full bg-gradient-to-br from-emerald-700 to-emerald-950 text-[11px] font-semibold text-amber-400">
                           {initials(u.name)}
                         </span>
-                        <div><button type="button" onClick={() => setViewUser(u)} title={`View ${u.name}'s profile`} className="flex items-center gap-1.5 text-left font-medium text-slate-800 underline-offset-2 hover:text-emerald-800 hover:underline"><UserAvatar noProfile user={u} className="h-7 w-7 text-[10px]" /><PresenceDot online={isOnline(u.id)} />{u.name}</button><p className="max-w-64 break-all font-mono text-[10px] text-emerald-800">ID: {accountId(u)}</p></div>
+                        <div><button type="button" onClick={() => setViewUser(u)} title={`View ${u.name}'s profile`} className="flex items-center gap-1.5 text-left font-medium text-slate-800 underline-offset-2 hover:text-emerald-800 hover:underline"><UserAvatar user={u} className="h-7 w-7 text-[10px]" />{u.name}</button><p className="max-w-64 break-all font-mono text-[10px] text-emerald-800">ID: {accountId(u)}</p></div>
                       </div>
                     </td>
                     <td className={TD}>
@@ -783,7 +782,7 @@ function ApplicantsTab() {
                       {initials(u.name)}
                     </span>
                     <div>
-                      <p className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-slate-800"><UserAvatar noProfile user={u} className="h-7 w-7 text-[10px]" /><button type="button" onClick={() => setViewUser(u)} title={`View ${u.name}'s profile`} className="underline-offset-2 hover:text-emerald-800 hover:underline">{u.name}</button> {hasPass(u) ? <span className="ml-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">Entrance passed</span> : <span className="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">No entrance pass</span>}</p>
+                      <p className="flex flex-wrap items-center gap-1.5 text-sm font-medium text-slate-800"><UserAvatar user={u} className="h-7 w-7 text-[10px]" /><button type="button" onClick={() => setViewUser(u)} title={`View ${u.name}'s profile`} className="underline-offset-2 hover:text-emerald-800 hover:underline">{u.name}</button> {hasPass(u) ? <span className="ml-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">Entrance passed</span> : <span className="ml-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">No entrance pass</span>}</p>
                       <p className="flex items-center gap-2 text-[11px] text-slate-500">
                         <Mail className="h-3 w-3" /> {u.email}
                         <Phone className="h-3 w-3" /> {u.phone}

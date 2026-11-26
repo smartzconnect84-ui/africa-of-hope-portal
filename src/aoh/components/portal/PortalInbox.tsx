@@ -103,7 +103,7 @@ export default function PortalInbox() {
                     )}
                   >
                     <UserAvatar
-                      user={{ name: conversation.name, avatarUrl: conversation.avatarUrl }}
+                      user={{ id: conversation.kind === "dm" ? conversation.peerId : undefined, name: conversation.name, avatarUrl: conversation.avatarUrl }}
                       className="h-9 w-9 text-[11px]"
                     />
                     <span className="min-w-0 flex-1">

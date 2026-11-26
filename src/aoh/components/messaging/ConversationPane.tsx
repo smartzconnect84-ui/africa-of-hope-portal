@@ -286,7 +286,7 @@ export default function ConversationPane({
         </button>
         <button type="button" onClick={onOpenInfo} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
           <UserAvatar
-            user={{ name: conversation.name, avatarUrl: conversation.avatarUrl }}
+            user={{ id: conversation.kind === "dm" ? conversation.peerId : undefined, name: conversation.name, avatarUrl: conversation.avatarUrl }}
             className="h-10 w-10 text-[12px]"
           />
           <span className="min-w-0">
@@ -405,7 +405,7 @@ export default function ConversationPane({
         {!thread.loading && rows.length === 0 && (
           <div className="mx-auto mt-8 max-w-sm rounded-xl bg-white/85 px-5 py-6 text-center shadow-sm">
             <UserAvatar
-              user={{ name: conversation.name, avatarUrl: conversation.avatarUrl }}
+              user={{ id: conversation.kind === "dm" ? conversation.peerId : undefined, name: conversation.name, avatarUrl: conversation.avatarUrl }}
               className="mx-auto h-14 w-14 text-base"
             />
             <p className="mt-3 text-[13px] font-semibold text-slate-800">

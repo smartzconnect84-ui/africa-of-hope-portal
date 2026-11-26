@@ -527,7 +527,7 @@ export default function Navigation({
                 {r.Icon ? (
                   <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-black text-white"><r.Icon className="h-4 w-4" /></span>
                 ) : (
-                  <UserAvatar user={{ name: r.label, avatarUrl: r.avatarUrl }} className="h-8 w-8 text-[11px]" />
+                  <UserAvatar user={{ id: r.id, name: r.label, avatarUrl: r.avatarUrl }} className="h-8 w-8 text-[11px]" />
                 )}
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-medium text-slate-800">{r.label}</span>

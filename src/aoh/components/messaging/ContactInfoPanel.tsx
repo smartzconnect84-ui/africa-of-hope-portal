@@ -112,7 +112,7 @@ export default function ContactInfoPanel({
 
       <div className="border-b border-slate-100 px-4 py-5 text-center">
         <UserAvatar
-          user={{ name: conversation.name, avatarUrl: conversation.avatarUrl }}
+          user={{ id: conversation.kind === "dm" ? conversation.peerId : undefined, name: conversation.name, avatarUrl: conversation.avatarUrl }}
           className="mx-auto h-24 w-24 text-2xl"
         />
         <p className="mt-3 truncate text-[16px] font-semibold text-slate-900">{conversation.name}</p>
@@ -232,7 +232,7 @@ export default function ContactInfoPanel({
               return (
                 <li key={id} className="flex items-center gap-2.5">
                   <UserAvatar
-                    user={{ name: user?.name ?? "Member", avatarUrl: user?.avatarUrl }}
+                    user={{ id: user?.id, name: user?.name ?? "Member", avatarUrl: user?.avatarUrl }}
                     className="h-8 w-8 text-[11px]"
                   />
                   <span className="min-w-0 flex-1">

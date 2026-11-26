@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { supabase } from "@/aoh/integrations/supabase/client";
 
 /**
@@ -31,6 +31,24 @@ export function formatLastSeen(iso: string | null): string {
   return `Last active ${Math.floor(h / 24)}d ago`;
 }
 
+let onlineSet: Set<string> = new Set();
+const subscribers = new Set<() => void>();
+function publishOnline(ids: string[]) {
+  onlineSet = new Set(ids);
+  subscribers.forEach((fn) => fn());
+}
+/** Live set of online user ids shared by every avatar in the app. */
+export function useOnlineSet(): Set<string> {
+  return useSyncExternalStore(
+    (fn) => {
+      subscribers.add(fn);
+      return () => { subscribers.delete(fn); };
+    },
+    () => onlineSet,
+    () => onlineSet,
+  );
+}
+
 export function usePresence(meId: string | null) {
   const [onlineIds, setOnlineIds] = useState<string[]>([]);
 
@@ -52,6 +70,7 @@ export function usePresence(meId: string | null) {
             });
           });
           setOnlineIds(Array.from(ids));
+          publishOnline(Array.from(ids));
         })
         .subscribe(async (status) => {
           if (status === "SUBSCRIBED") {
