@@ -1,12 +1,9 @@
-import { useEffect, useRef, useState } from "react";
 import { displayRole } from "@/aoh/lib/roleDisplay";
-import { Check, CheckCheck, MessageCircle, Send } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import type { User } from "@/aoh/types";
 import { accountId } from "@/aoh/lib/identifiers";
-import { useDirectMessages } from "@/aoh/lib/directMessages";
 import { formatLastSeen, getLastSeen } from "@/aoh/lib/presence";
 import { Button } from "@/aoh/components/ui/button";
-import { Textarea } from "@/aoh/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -110,144 +107,6 @@ export function UserProfileDialog({
                 <MessageCircle className="mr-1.5 h-4 w-4" /> Message
               </Button>
             </div>
-          </>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-export function DirectMessageDialog({
-  meId,
-  meName,
-  peer,
-  onClose,
-}: {
-  meId: string | null;
-  meName: string;
-  peer: User | null;
-  onClose: () => void;
-}) {
-  const { messages, peerTyping, send, sendTyping, markSeen } = useDirectMessages(meId ?? undefined, peer?.id ?? undefined);
-  const [draft, setDraft] = useState("");
-  const [sending, setSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const typingRef = useRef<number>(0);
-
-  useEffect(() => {
-    if (peer) {
-      setDraft("");
-      setError(null);
-      void markSeen();
-    }
-  }, [peer?.id, markSeen, peer]);
-
-  useEffect(() => {
-    if (peer && messages.length) void markSeen();
-    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages.length, peer, markSeen]);
-
-  function onType(v: string) {
-    setDraft(v);
-    const now = Date.now();
-    if (now - typingRef.current > 1500) {
-      typingRef.current = now;
-      sendTyping();
-    }
-  }
-
-  async function onSend() {
-    if (!draft.trim() || sending) return;
-    setSending(true);
-    setError(null);
-    const ok = await send(draft);
-    setSending(false);
-    if (!ok) setError("Message could not be delivered. It is saved on this device and will retry automatically.");
-    else {
-      setError(null);
-      setDraft("");
-    }
-  }
-
-  return (
-    <Dialog open={!!peer} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="flex max-h-[85vh] max-w-md flex-col">
-        {peer && (
-          <>
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <MessageCircle className="h-4 w-4 text-emerald-700" />
-                <span className="truncate">Chat with {peer.name}</span>
-              </DialogTitle>
-              <DialogDescription>
-                1:1 conversation · messages deliver instantly on this device and live to everyone online
-              </DialogDescription>
-            </DialogHeader>
-            <div className="min-h-48 max-h-[46vh] flex-1 space-y-2 overflow-y-auto rounded-xl bg-slate-50 p-3" aria-live="polite">
-              {messages.length === 0 && (
-                <p className="py-8 text-center text-xs text-slate-400">
-                  No messages yet. Say hello to {peer.name.split(" ")[0]}.
-                </p>
-              )}
-              {messages.map((m) => {
-                const mine = m.sender_id === meId;
-                return (
-                  <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
-                    <div
-                      className={cn(
-                        "max-w-[80%] rounded-2xl px-3 py-2 text-sm shadow-sm",
-                        mine ? "rounded-br-md bg-emerald-700 text-white" : "rounded-bl-md bg-white text-slate-800 ring-1 ring-slate-200",
-                      )}
-                    >
-                      <p className="whitespace-pre-wrap break-words">{m.body}</p>
-                      <p className={cn("mt-1 flex items-center justify-end gap-1 text-[10px]", mine ? "text-emerald-100" : "text-slate-400")}>
-                        {new Date(m.created_at).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                        {mine &&
-                          (m.seen_at ? (
-                            <span title={`Seen`} className="inline-flex items-center gap-0.5">
-                              <CheckCheck className="h-3 w-3" /> Seen
-                            </span>
-                          ) : (
-                            <span title="Sent" className="inline-flex items-center">
-                              <Check className="h-3 w-3" />
-                            </span>
-                          ))}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-              {peerTyping && <p className="text-xs italic text-slate-400">{peer.name.split(" ")[0]} is typing…</p>}
-              <div ref={bottomRef} />
-            </div>
-            {error && (
-              <p role="alert" className="rounded-lg bg-rose-50 p-2 text-xs text-rose-700">
-                {error}
-              </p>
-            )}
-            <div className="flex items-end gap-2">
-              <Textarea
-                value={draft}
-                onChange={(e) => onType(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    void onSend();
-                  }
-                }}
-                placeholder={`Message ${peer.name.split(" ")[0]}… (Enter to send)`}
-                rows={2}
-                aria-label={`Message ${peer.name}`}
-              />
-              <Button onClick={() => void onSend()} disabled={sending || !draft.trim()} className="bg-emerald-700 hover:bg-emerald-800">
-                <Send className="h-4 w-4" />
-                <span className="sr-only">Send message to {peer.name}</span>
-              </Button>
-            </div>
-            <p className="text-[11px] text-slate-400">
-              Signed in as {meName}. Read receipts update live when both sides are online.
-            </p>
           </>
         )}
       </DialogContent>
