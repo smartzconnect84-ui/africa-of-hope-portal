@@ -16,6 +16,7 @@ import {
   type Message,
 } from "@/aoh/lib/messaging";
 import { displayRole } from "@/aoh/lib/roleDisplay";
+import { formatLastSeen, getLastSeen } from "@/aoh/lib/presence";
 import type { User } from "@/aoh/types";
 
 function MediaTile({ message }: { message: Message }) {
@@ -111,19 +112,30 @@ export default function ContactInfoPanel({
       </header>
 
       <div className="border-b border-slate-100 px-4 py-5 text-center">
-        <UserAvatar
-          user={{ id: conversation.kind === "dm" ? conversation.peerId : undefined, name: conversation.name, avatarUrl: conversation.avatarUrl }}
-          className="mx-auto h-24 w-24 text-2xl"
-        />
+        <span className="relative mx-auto block h-24 w-24">
+          <UserAvatar
+            user={{ id: conversation.kind === "dm" ? conversation.peerId : undefined, name: conversation.name, avatarUrl: conversation.avatarUrl }}
+            className="h-24 w-24 text-2xl"
+          />
+          {!isGroup && online && (
+            <span
+              className="absolute bottom-1 right-1 h-4 w-4 rounded-full border-2 border-white bg-[#25d366] shadow-sm"
+              aria-hidden="true"
+            />
+          )}
+        </span>
         <p className="mt-3 truncate text-[16px] font-semibold text-slate-900">{conversation.name}</p>
         <p className="mt-0.5 text-[12px] text-slate-500">
           {isGroup
             ? `${memberIds.length} member${memberIds.length === 1 ? "" : "s"}`
             : online
-              ? "online now"
-              : peer?.lastSeenAt
-                ? `last seen ${new Date(peer.lastSeenAt).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`
-                : displayRole(peer?.role ?? conversation.role ?? "") || "Portal member"}
+              ? "Active now"
+              : (() => {
+                  const seen = peer?.lastSeenAt ?? (peer ? getLastSeen(peer.id) : null);
+                  return seen
+                    ? formatLastSeen(seen)
+                    : displayRole(peer?.role ?? conversation.role ?? "") || "Portal member";
+                })()}
         </p>
         {isGroup && conversation.ownerId === meId && (
           <p className="mt-1 inline-block rounded-full bg-emerald-50 px-2 py-0.5 text-[10.5px] font-semibold text-emerald-800">

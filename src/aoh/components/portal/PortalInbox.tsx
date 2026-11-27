@@ -33,13 +33,7 @@ export default function PortalInbox() {
   const recent = useMemo(() => conversations.slice(0, 7), [conversations]);
 
   function openMessages(target?: { peerId?: string; groupId?: string }) {
-    try {
-      if (target?.peerId || target?.groupId) {
-        sessionStorage.setItem("aoh-messages-target", JSON.stringify(target));
-      }
-    } catch {
-      /* storage may be blocked; the event still carries the target */
-    }
+    // The portal listener stores the target itself when it switches views.
     window.dispatchEvent(new CustomEvent("aoh-open-messages", { detail: target ?? {} }));
     setOpen(false);
   }

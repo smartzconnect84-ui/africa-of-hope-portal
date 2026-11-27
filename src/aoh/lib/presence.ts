@@ -37,6 +37,12 @@ function publishOnline(ids: string[]) {
   onlineSet = new Set(ids);
   subscribers.forEach((fn) => fn());
 }
+/** Convenience predicate over the shared online set (no extra subscription). */
+export function useIsOnline(): (id: string | null | undefined) => boolean {
+  const online = useOnlineSet();
+  return (id) => !!id && online.has(id);
+}
+
 /** Live set of online user ids shared by every avatar in the app. */
 export function useOnlineSet(): Set<string> {
   return useSyncExternalStore(

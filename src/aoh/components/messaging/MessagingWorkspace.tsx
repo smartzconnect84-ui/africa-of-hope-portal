@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { MessageCircle, MessagesSquare, Search, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useApp } from "@/aoh/context/AppContext";
-import { usePresence } from "@/aoh/lib/presence";
+import { useOnlineSet } from "@/aoh/lib/presence";
+import { displayRole } from "@/aoh/lib/roleDisplay";
 import { cn } from "@/aoh/lib/utils";
 import {
   sendToThread,
@@ -69,7 +70,10 @@ export default function MessagingWorkspace() {
 
   const [tick, setTick] = useState(0);
   const { conversations, groups, loading, error, capabilities } = useInbox(meId || undefined, people, tick);
-  const { onlineIds } = usePresence(meId || null);
+  // PresenceHost keeps one realtime presence channel for the whole app; the
+  // messenger reads that shared set instead of opening a second subscription.
+  const onlineSet = useOnlineSet();
+  const onlineIds = useMemo(() => Array.from(onlineSet), [onlineSet]);
 
   const [activeKey, setActiveKey] = useState<string | null>(null);
   // Back from an open conversation returns to the conversation list.
@@ -185,7 +189,7 @@ export default function MessagingWorkspace() {
   }
 
   return (
-    <div className="-m-4 flex h-[calc(100dvh-4rem)] overflow-hidden border-y border-black/10 bg-[#efeae2] sm:-m-5 lg:-m-6 xl:-m-8">
+    <div className="-m-4 flex h-[calc(100dvh-4rem-env(safe-area-inset-top))] max-h-[calc(100dvh-4rem-env(safe-area-inset-top))] min-h-0 w-full overflow-hidden border-y border-black/10 bg-[#efeae2] sm:-m-5 lg:-m-6 xl:-m-8">
       <div className={cn("h-full shrink-0 border-r border-black/10", active ? "hidden md:flex" : "flex w-full md:w-auto")}>
         <ChatList
           conversations={conversations}
@@ -234,7 +238,7 @@ export default function MessagingWorkspace() {
             onClick={() => setInfoOpen(false)}
             className="fixed inset-0 z-30 bg-black/30 lg:hidden"
           />
-          <div className="fixed inset-y-0 right-0 z-40 w-[min(92vw,340px)] border-l border-black/10 shadow-2xl lg:static lg:z-auto lg:w-[340px] lg:shrink-0 lg:shadow-none">
+          <div className="fixed inset-y-0 right-0 z-40 w-full max-w-[360px] border-l border-black/10 shadow-2xl sm:w-[min(92vw,360px)] 2xl:static 2xl:z-auto 2xl:w-[340px] 2xl:shrink-0 2xl:shadow-none">
             <ContactInfoPanel
               conversation={active}
               meId={meId}
@@ -312,7 +316,7 @@ export default function MessagingWorkspace() {
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-[13px] font-medium text-slate-800">{conversation.name}</span>
                     <span className="block truncate text-[11px] text-slate-500">
-                      {conversation.kind === "group" ? "Group" : conversation.role ?? "Direct message"}
+                      {conversation.kind === "group" ? "Group" : displayRole(conversation.role) || "Direct message"}
                     </span>
                   </span>
                 </button>

@@ -165,7 +165,7 @@ export default function Composer({
   }
 
   return (
-    <div className="relative border-t border-black/5 bg-[#f0f2f5] px-2 pb-2 pt-1.5 sm:px-3">
+    <div className="relative border-t border-black/5 bg-[#f0f2f5] px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5 sm:px-3">
       {replyTo && (
         <div className="mb-1.5 flex items-start gap-2 rounded-lg border-l-[3px] border-[#25d366] bg-white px-2.5 py-1.5 shadow-sm">
           <div className="min-w-0 flex-1">

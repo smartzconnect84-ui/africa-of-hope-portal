@@ -48,8 +48,9 @@ import {
 } from "@/aoh/components/ui/dropdown-menu";
 import { EmptyState, SectionHeader, panelClass } from "./Navigation";
 import DataTools from "./DataTools";
-import { UserProfileDialog, DirectMessageDialog } from "./DirectoryMessaging";
-import { usePresence } from "@/aoh/lib/presence";
+import { UserProfileDialog } from "./DirectoryMessaging";
+import { openMessengerChat } from "@/aoh/lib/messaging";
+import { useIsOnline } from "@/aoh/lib/presence";
 import CongratulationsAction from './CongratulationsAction';
 import { supabase } from "@/aoh/integrations/supabase/client";
 import { loadEntrancePasses, loadRequirePass } from "@/aoh/lib/entranceTest";
@@ -148,8 +149,7 @@ function StaffTab({ currentUser, isSuperAdmin }: { currentUser: User | null; isS
   const [addOpen, setAddOpen] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [viewUser, setViewUser] = useState<User | null>(null);
-  const [chatUser, setChatUser] = useState<User | null>(null);
-  const { isOnline } = usePresence(currentUser?.id ?? null);
+  const isOnline = useIsOnline();
 
   const canManage = can("staff.manage");
   const staff = state.users.filter((u) => STAFF_ROLES.includes(u.role));
@@ -288,8 +288,7 @@ function StaffTab({ currentUser, isSuperAdmin }: { currentUser: User | null; isS
       </div>
 
       {canManage && <AddStaffDialog open={addOpen} onOpenChange={setAddOpen} isSuperAdmin={isSuperAdmin} />}
-      <UserProfileDialog user={viewUser} online={viewUser ? isOnline(viewUser.id) : false} onClose={() => setViewUser(null)} onMessage={(v) => { setViewUser(null); setChatUser(v); }} />
-      <DirectMessageDialog meId={currentUser?.id ?? null} meName={currentUser?.name ?? "You"} peer={chatUser} onClose={() => setChatUser(null)} />
+      <UserProfileDialog user={viewUser} online={viewUser ? isOnline(viewUser.id) : false} onClose={() => setViewUser(null)} onMessage={(v) => { setViewUser(null); openMessengerChat({ peerId: v.id }); }} />
     </div>
   );
 }
@@ -504,8 +503,7 @@ function StudentsTab() {
   const [status, setStatus] = useState("All");
   const [assignFor, setAssignFor] = useState<User | null>(null);
   const [viewUser, setViewUser] = useState<User | null>(null);
-  const [chatUser, setChatUser] = useState<User | null>(null);
-  const { isOnline } = usePresence(currentUser?.id ?? null);
+  const isOnline = useIsOnline();
 
   const canManage = can("students.manage");
   const students = state.users.filter((u) => u.role === "Student" && u.status !== "Pending Approval");
@@ -636,8 +634,7 @@ function StudentsTab() {
       </div>
 
       {assignFor && <AssignDialog user={assignFor} onOpenChange={(o) => !o && setAssignFor(null)} />}
-      <UserProfileDialog user={viewUser} online={viewUser ? isOnline(viewUser.id) : false} onClose={() => setViewUser(null)} onMessage={(v) => { setViewUser(null); setChatUser(v); }} />
-      <DirectMessageDialog meId={currentUser?.id ?? null} meName={currentUser?.name ?? "You"} peer={chatUser} onClose={() => setChatUser(null)} />
+      <UserProfileDialog user={viewUser} online={viewUser ? isOnline(viewUser.id) : false} onClose={() => setViewUser(null)} onMessage={(v) => { setViewUser(null); openMessengerChat({ peerId: v.id }); }} />
     </div>
   );
 }
@@ -723,8 +720,7 @@ function AssignDialog({ user, onOpenChange }: { user: User; onOpenChange: (open:
 function ApplicantsTab() {
   const { state, approveApplicant, rejectApplicant, currentUser } = useApp();
   const [viewUser, setViewUser] = useState<User | null>(null);
-  const [chatUser, setChatUser] = useState<User | null>(null);
-  const { isOnline } = usePresence(currentUser?.id ?? null);
+  const isOnline = useIsOnline();
   const pending = state.users.filter((u) => u.role === "Student" && u.status === "Pending Approval");
   const [assignFor, setAssignFor] = useState<User | null>(null);
   const [approving, setApproving] = useState<string | null>(null);
@@ -815,8 +811,7 @@ function ApplicantsTab() {
       </div>
 
       {assignFor && <AssignDialog user={assignFor} onOpenChange={(o) => !o && setAssignFor(null)} />}
-      <UserProfileDialog user={viewUser} online={viewUser ? isOnline(viewUser.id) : false} onClose={() => setViewUser(null)} onMessage={(v) => { setViewUser(null); setChatUser(v); }} />
-      <DirectMessageDialog meId={currentUser?.id ?? null} meName={currentUser?.name ?? "You"} peer={chatUser} onClose={() => setChatUser(null)} />
+      <UserProfileDialog user={viewUser} online={viewUser ? isOnline(viewUser.id) : false} onClose={() => setViewUser(null)} onMessage={(v) => { setViewUser(null); openMessengerChat({ peerId: v.id }); }} />
     </div>
   );
 }

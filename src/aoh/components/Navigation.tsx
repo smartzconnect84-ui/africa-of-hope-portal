@@ -756,7 +756,9 @@ export default function Navigation({
           </div>
         </aside>
         <main className="min-w-0 max-w-full flex-1 overflow-x-clip p-4 sm:p-5 lg:p-6 xl:p-8">
-          {view !== "announcements" && <PortalAnnouncementTicker onOpenBoard={() => go("announcements")} />}
+          {view !== "announcements" && view !== "messages" && (
+            <PortalAnnouncementTicker onOpenBoard={() => go("announcements")} />
+          )}
           {children}
         </main>
       </div>

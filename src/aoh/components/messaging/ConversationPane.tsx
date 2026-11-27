@@ -5,6 +5,8 @@ import { clearChatBackground, loadDmBackground, setChatBackground } from "@/aoh/
 import { TRANSLATE_LANGUAGES, setTranslatePref, useTranslatePref } from "@/aoh/lib/translate";
 import UserAvatar from "@/aoh/components/UserAvatar";
 import { cn } from "@/aoh/lib/utils";
+import { formatLastSeen, getLastSeen } from "@/aoh/lib/presence";
+import { displayRole } from "@/aoh/lib/roleDisplay";
 import {
   attachmentTypeFor,
   chatErrorText,
@@ -311,6 +313,9 @@ export default function ConversationPane({
     onForward: (message) => onForward(message),
   };
 
+  const lastSeenIso = peer?.lastSeenAt ?? (peer ? getLastSeen(peer.id) : null);
+  const lastSeenLabel = lastSeenIso ? formatLastSeen(lastSeenIso) : "";
+
   const subtitle =
     conversation.kind === "group" ? (
       <span className="flex items-center gap-1.5">
@@ -320,11 +325,14 @@ export default function ConversationPane({
         {groupOnline} online
       </span>
     ) : online ? (
-      <span className="text-[#075e54]">online</span>
-    ) : peer?.lastSeenAt ? (
-      `last seen ${new Date(peer.lastSeenAt).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`
+      <span className="inline-flex items-center gap-1.5 font-medium text-[#0a7c68]">
+        <span className="h-1.5 w-1.5 rounded-full bg-[#25d366]" aria-hidden="true" />
+        Active now
+      </span>
+    ) : lastSeenLabel ? (
+      <span className="text-slate-500">{lastSeenLabel}</span>
     ) : (
-      peer?.role ?? "Direct message"
+      displayRole(peer?.role) || "Direct message"
     );
 
   return (
@@ -339,10 +347,18 @@ export default function ConversationPane({
           <ArrowLeft className="h-5 w-5" />
         </button>
         <button type="button" onClick={onOpenInfo} className="flex min-w-0 flex-1 items-center gap-2.5 text-left">
-          <UserAvatar
-            user={{ id: conversation.kind === "dm" ? conversation.peerId : undefined, name: conversation.name, avatarUrl: conversation.avatarUrl }}
-            className="h-10 w-10 text-[12px]"
-          />
+          <span className="relative shrink-0">
+            <UserAvatar
+              user={{ id: conversation.kind === "dm" ? conversation.peerId : undefined, name: conversation.name, avatarUrl: conversation.avatarUrl }}
+              className="h-10 w-10 text-[12px]"
+            />
+            {conversation.kind === "dm" && online && (
+              <span
+                className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#f0f2f5] bg-[#25d366]"
+                aria-hidden="true"
+              />
+            )}
+          </span>
           <span className="min-w-0">
             <span className="block truncate text-[14px] font-semibold text-slate-900">{conversation.name}</span>
             <span className="block truncate text-[11.5px] text-slate-500">
@@ -355,7 +371,9 @@ export default function ConversationPane({
           </span>
         </button>
         <BackgroundMenu conversation={conversation} meId={meId} hasBackground={!!wallpaper} onChange={setBgOverride} />
-        <TranslateMenu />
+        <div className="hidden sm:block">
+          <TranslateMenu />
+        </div>
         <button
           type="button"
           onClick={() => setSearchOpen((open) => !open)}

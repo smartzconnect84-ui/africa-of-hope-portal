@@ -73,7 +73,7 @@ export default function ChatList({
   ];
 
   return (
-    <aside className="flex h-full w-full flex-col bg-white md:w-[340px] md:shrink-0 lg:w-[380px] xl:w-[400px]">
+    <aside className="flex h-full w-full min-w-0 flex-col bg-white md:w-[320px] md:shrink-0 lg:w-[360px] xl:w-[400px]">
       <header className="bg-[#075e54] px-3 pb-3 pt-2 text-white">
         <div className="flex items-center gap-2">
           <UserAvatar
@@ -128,7 +128,7 @@ export default function ChatList({
         </div>
       </header>
 
-      <div className="flex gap-1.5 border-b border-slate-100 bg-white px-2.5 py-2">
+      <div className="flex gap-1.5 overflow-x-auto border-b border-slate-100 bg-white px-2.5 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {filters.map((item) => (
           <button
             key={item.id}
@@ -267,7 +267,7 @@ export default function ChatList({
         </ul>
       </div>
 
-      <footer className="border-t border-slate-100 px-3 py-2 text-[10px] leading-snug text-slate-400">
+      <footer className="border-t border-slate-100 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 text-[10px] leading-snug text-slate-400">
         Messages are private to you and the people in the conversation.
       </footer>
     </aside>

@@ -162,7 +162,9 @@ function Portal({ onExitToPublic, initialTab }: { onExitToPublic: () => void; in
     <KnockProviderShell>
     <Navigation view={activeKey} onNavigate={setView} onExitToPublic={onExitToPublic}>
       <div key={currentUser.id}>
-        {activeKey !== "announcements" && <PortalAnnouncementTicker onOpen={() => setView("announcements")} />}
+        {activeKey !== "announcements" && activeKey !== "messages" && (
+          <PortalAnnouncementTicker onOpen={() => setView("announcements")} />
+        )}
         <Suspense fallback={<div className="grid min-h-[40vh] place-items-center" role="status" aria-label="Loading"><span className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-200 border-t-emerald-700" /></div>}>
           {activeView?.render(ctx)}
         </Suspense>

@@ -180,6 +180,18 @@ export function threadCacheKey(meId: string, target: ThreadRef) {
   return target.kind === "dm" ? dmCacheKey(meId, target.peerId) : groupCacheKey(target.groupId);
 }
 
+/**
+ * Opens the Messages workspace on a conversation from anywhere in the portal
+ * (header inbox, member directory, profile card). The event switches the app
+ * to the Messages view; the session target survives until that view mounts.
+ */
+export function openMessengerChat(target: { peerId?: string; groupId?: string } = {}) {
+  if (typeof window === "undefined") return;
+  // The portal listener stashes the target only when it has to change views,
+  // so an already-open messenger never leaves a stale destination behind.
+  window.dispatchEvent(new CustomEvent("aoh-open-messages", { detail: target }));
+}
+
 /** Stable React key / UI identifier for a thread. */
 export function threadKeyOf(target: ThreadRef) {
   return target.kind === "dm" ? `dm:${target.peerId}` : `group:${target.groupId}`;
