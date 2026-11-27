@@ -1,5 +1,5 @@
 import { supabase } from "@/aoh/integrations/supabase/client";
-import { uploadSiteAsset } from "./storage";
+import { uploadBusinessLogo, uploadSiteAsset } from "./storage";
 
 export interface Vacancy {
   id: string;
@@ -74,7 +74,9 @@ function toStaffVacancy(row: Record<string, unknown>): StaffVacancy {
 }
 
 export async function uploadBoardImage(kind: "vacancies" | "businesses", file: File): Promise<string> {
-  return uploadSiteAsset(kind, file);
+  // Vacancy photos are staff-managed CMS assets; business logos come from the
+  // public submission form and therefore cannot live in site-assets.
+  return kind === "businesses" ? uploadBusinessLogo(file) : uploadSiteAsset(kind, file);
 }
 
 export async function loadVacancies(): Promise<{ rows: Vacancy[]; backend: boolean }> {

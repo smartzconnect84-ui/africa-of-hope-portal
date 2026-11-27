@@ -1,3 +1,5 @@
+import { blobEnabled, deleteBlob, isBlobPath, putBlob, signedBlobUrl, type BlobBucket } from "./blobStore";
+
 export type AcademicApiClient = typeof import("../integrations/supabase/client.ts")["supabase"];
 type AcademicRowsQuery = ReturnType<ReturnType<AcademicApiClient["from"]>["select"]>;
 
@@ -299,12 +301,16 @@ export function createAcademicApi(client: AcademicApiClient, now: () => number =
     if (file.size > MAX_TRAINING_MATERIAL_BYTES) throw new Error(tooLargeMessage);
     if (!SUPPORTED_TRAINING_MATERIAL_MIME_TYPES.has(file.type)) throw new Error("This file format is not supported. Use PDF, Office, image, audio, video, text, or ZIP files.");
     const path = trainingMaterialPath(scopeId, uploaderId, file.name, now());
+    const mime = file.type || "application/octet-stream";
+    if (await blobEnabled()) {
+      return { path: await putBlob(bucket as BlobBucket, path, file, mime), mime };
+    }
     const { error } = await client.storage.from(bucket).upload(path, file, {
-      contentType: file.type || "application/octet-stream",
+      contentType: mime,
       upsert: false,
     });
     if (error) throw new Error(explainAcademicError(error) ?? error.message);
-    return { path, mime: file.type || "application/octet-stream" };
+    return { path, mime };
   }
 
   return {
@@ -433,6 +439,7 @@ export function createAcademicApi(client: AcademicApiClient, now: () => number =
     return uploadValidated("training-materials", cohortId, teacherId, file, "Training materials must be 25 MB or smaller.");
   },
   async deleteMaterialUpload(path: string) {
+    if (isBlobPath(path)) return deleteBlob(path);
     const { error } = await client.storage.from("training-materials").remove([path]);
     if (error) throw new Error(explainAcademicError(error) ?? error.message);
   },
@@ -472,6 +479,7 @@ export function createAcademicApi(client: AcademicApiClient, now: () => number =
     return data;
   },
   async materialUrl(path: string) {
+    if (isBlobPath(path)) return signedBlobUrl(path, { expires: 600 });
     const { data, error } = await client.storage.from("training-materials").createSignedUrl(path, 600);
     if (error || !data) throw new Error(explainAcademicError(error) ?? "Could not open this material.");
     return data.signedUrl;

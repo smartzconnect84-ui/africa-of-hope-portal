@@ -1,4 +1,5 @@
 import { supabase } from "@/aoh/integrations/supabase/client";
+import { documentUrl } from "./storage";
 
 export interface FileSubmission {
   id: string;
@@ -200,7 +201,5 @@ export async function listSelfPacedPlans(userId: string): Promise<SelfPacedPlan[
 }
 
 export async function materialUrl(path: string): Promise<string> {
-  const { data, error } = await supabase.storage.from("documents").createSignedUrl(path, 60 * 10);
-  if (error || !data) throw new Error(error?.message ?? "Could not open file");
-  return data.signedUrl;
+  return documentUrl(path);
 }

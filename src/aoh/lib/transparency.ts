@@ -1,6 +1,7 @@
 import { supabase } from '@/aoh/integrations/supabase/client';
 import { validateFile, MAX_DOCUMENT_BYTES } from './storage';
-import { newId } from './ids';
+import { newId, newUuid } from './ids';
+import { blobEnabled, deleteBlob, isBlobPath, putBlob, signedBlobUrl } from './blobStore';
 
 export const REPORT_CATEGORIES = ['Registration papers', 'Audited accounts', 'Annual reports'] as const;
 export type ReportCategory = typeof REPORT_CATEGORIES[number];
@@ -29,12 +30,19 @@ export async function createReport(input: ReportInput, file: File): Promise<void
   const signature = await file.slice(0, 5).text();
   if (signature !== '%PDF-') throw new Error('Please choose a genuine PDF document.');
   const id = newId("doc");
-  const path = `${id}.pdf`;
-  const { error: uploadError } = await supabase.storage.from(bucket).upload(path, file, { contentType: 'application/pdf', upsert: false });
-  if (uploadError) throw new Error(uploadError.message);
-  const { error } = await supabase.from('transparency_reports').insert({ ...input, id, file_path: path, published: false });
+  // The storage policy only accepts a bare UUID object name (^[0-9a-f-]{36}.pdf$).
+  const path = `${newUuid()}.pdf`;
+  let filePath = path;
+  if (await blobEnabled()) {
+    filePath = await putBlob('transparency-reports', path, file, 'application/pdf');
+  } else {
+    const { error: uploadError } = await supabase.storage.from(bucket).upload(path, file, { contentType: 'application/pdf', upsert: false });
+    if (uploadError) throw new Error(uploadError.message);
+  }
+  const { error } = await supabase.from('transparency_reports').insert({ ...input, id, file_path: filePath, published: false });
   if (error) {
-    await supabase.storage.from(bucket).remove([path]);
+    if (isBlobPath(filePath)) await deleteBlob(filePath);
+    else await supabase.storage.from(bucket).remove([path]);
     throw new Error(error.message);
   }
 }
@@ -43,9 +51,15 @@ export async function updateReport(id: string, input: Partial<ReportInput> & { p
   if (error || !data) throw new Error(error?.message || 'Report was not updated. Check your permissions.');
 }
 export async function downloadReport(report: TransparencyReport): Promise<void> {
-  const { data, error } = await supabase.storage.from(bucket).createSignedUrl(report.file_path, 60);
-  if (error || !data) throw new Error(error?.message || 'The document is unavailable.');
-  const response = await fetch(data.signedUrl);
+  let fileUrl: string;
+  if (isBlobPath(report.file_path)) {
+    fileUrl = await signedBlobUrl(report.file_path, { download: true, name: `${report.title}.pdf`, expires: 60 });
+  } else {
+    const { data, error } = await supabase.storage.from(bucket).createSignedUrl(report.file_path, 60);
+    if (error || !data) throw new Error(error?.message || 'The document is unavailable.');
+    fileUrl = data.signedUrl;
+  }
+  const response = await fetch(fileUrl);
   if (!response.ok) throw new Error('The document could not be downloaded. Please retry.');
   const url = URL.createObjectURL(await response.blob());
   const link = document.createElement('a');

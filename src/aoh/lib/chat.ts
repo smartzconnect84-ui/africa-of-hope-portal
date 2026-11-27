@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/aoh/integrations/supabase/client";
+import { blobEnabled, isBlobPath, putBlob, signedBlobUrl } from "./blobStore";
 
 /**
  * Chat data layer: 1:1 messages (direct_messages) and group chat
@@ -750,10 +751,14 @@ export async function uploadChatFile(input: {
   const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const folder = input.groupId ? `group/${input.groupId}` : `dm/${input.meId}/${input.peerId}`;
   const path = `${folder}/${unique}-${safeName}`;
+  const contentType = input.file instanceof File ? input.file.type || undefined : undefined;
+  if (await blobEnabled()) {
+    return { path: await putBlob("chat-attachments", path, input.file, contentType), name: safeName };
+  }
   const { error } = await supabase.storage.from(BUCKET).upload(path, input.file, {
     cacheControl: "3600",
     upsert: false,
-    contentType: input.file instanceof File ? input.file.type || undefined : undefined,
+    contentType,
   });
   if (error) throw error;
   return { path, name: safeName };
@@ -776,8 +781,13 @@ export function useSignedUrl(path: string | null, seconds = 3600) {
     }
     void (async () => {
       try {
-        const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(path, seconds);
-        if (!cancelled && !error) setUrl(data?.signedUrl ?? null);
+        if (isBlobPath(path)) {
+          const signed = await signedBlobUrl(path, { expires: seconds });
+          if (!cancelled) setUrl(signed);
+        } else {
+          const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(path, seconds);
+          if (!cancelled && !error) setUrl(data?.signedUrl ?? null);
+        }
       } catch {
         /* leave null and show a fallback */
       }

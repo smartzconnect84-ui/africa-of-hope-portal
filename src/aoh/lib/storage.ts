@@ -1,11 +1,13 @@
 import { supabase } from "@/aoh/integrations/supabase/client";
 import { compressImage } from "./imagePerf";
-import { newId } from "./ids";
+import { newId, newUuid } from "./ids";
+import { blobEnabled, blobPathFor, deleteBlob, isBlobPath, listBlobObjects, moveBlob, parseBlobPath, putBlob, signedBlobUrl } from "./blobStore";
 
 const MB = 1024 * 1024;
 
 const AVATAR_BUCKET = "avatars";
 const PROGRAM_IMAGE_BUCKET = "program-images";
+const BUSINESS_LOGO_BUCKET = "business-logos";
 const DOCUMENT_BUCKET = "documents";
 const SITE_ASSETS_BUCKET = "site-assets";
 
@@ -61,7 +63,7 @@ function extension(file: File): string {
 }
 
 /** Random id that works on http://, older browsers and Safari (no crypto.randomUUID). */
-const newStorageId = newId;
+const newStorageId = newUuid;
 
 function safeName(name: string): string {
   return name.replace(/[^A-Za-z0-9._-]+/g, "-").replace(/-+/g, "-").slice(0, 80) || "file";
@@ -97,11 +99,17 @@ async function uploadPublicImage(bucket: string, folder: string, file: File): Pr
   return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
 }
 
-/** Removes every object in the folder except `keepUrl`. Best effort, never throws. */
-async function pruneFolder(bucket: string, folder: string, keepUrl?: string) {
+/** Removes every matching object in the folder except `keepUrl`. Best effort, never throws. */
+async function pruneFolder(
+  bucket: string,
+  folder: string,
+  keepUrl?: string,
+  include: (name: string) => boolean = () => true,
+) {
   try {
     const { data } = await supabase.storage.from(bucket).list(folder, { limit: 100 });
     const stale = (data ?? [])
+      .filter((o) => include(o.name))
       .map((o) => `${folder}/${o.name}`)
       .filter((path) => !keepUrl || !keepUrl.endsWith(path));
     // Remove in small batches so a full folder never trips provider limits.
@@ -118,12 +126,24 @@ async function pruneFolder(bucket: string, folder: string, keepUrl?: string) {
 export const uploadAvatar = (userId: string, file: File) =>
   uploadPublicImage(AVATAR_BUCKET, userId, file);
 
-/** Call after the profile row is saved so the previous photos can go. */
+/**
+ * Call after the profile row is saved so the previous photos can go.
+ * Group photos share the avatars bucket under `<uid>/group-…`; only profile
+ * photos may be pruned or changing an avatar would break every group chat.
+ */
 export const pruneAvatars = (userId: string, keepUrl?: string) =>
-  pruneFolder(AVATAR_BUCKET, userId, keepUrl);
+  pruneFolder(AVATAR_BUCKET, userId, keepUrl, (name) => !/^(group|chat)-/i.test(name));
 
 export const uploadProgramImage = (programId: string, file: File) =>
   uploadPublicImage(PROGRAM_IMAGE_BUCKET, programId, file);
+
+/**
+ * Alumni-business logos submitted from the public Campus Life form. They cannot
+ * use site-assets (staff-only writes), so they get their own public bucket that
+ * anonymous submissions may insert into (see the business_logos_* policies).
+ */
+export const uploadBusinessLogo = (file: File) =>
+  uploadPublicImage(BUSINESS_LOGO_BUCKET, "businesses", file);
 
 export const pruneProgramImages = (programId: string, keepUrl?: string) =>
   pruneFolder(PROGRAM_IMAGE_BUCKET, programId, keepUrl);
@@ -147,14 +167,14 @@ export const pruneAuthBackground = (folder: string, keepUrl?: string) =>
 const docFolder = (userId: string) => `profiles/${userId}`;
 const SEP = "__";
 
-function parseDocument(folder: string, name: string, size: number, createdAt: string): ProfileDocument {
+function parseDocument(path: string, name: string, size: number, createdAt: string): ProfileDocument {
   const [stamp, rawCategory, ...rest] = name.split(SEP);
   const category = DOCUMENT_CATEGORIES.find(
     (c) => safeName(c) === rawCategory,
   ) ?? "Other";
   const ts = Number(stamp);
   return {
-    path: `${folder}/${name}`,
+    path,
     name: rest.length ? rest.join(SEP) : name,
     category,
     size,
@@ -170,12 +190,28 @@ export async function listDocuments(userId: string): Promise<ProfileDocument[]> 
       .list(folder, { limit: 100, offset, sortBy: { column: "name", order: "asc" } });
     if (error) throw new Error(explain(error.message));
     for (const item of data ?? []) {
-      if (item.id && item.name !== ".emptyFolderPlaceholder") result.push(parseDocument(folder, item.name,
+      if (item.id && item.name !== ".emptyFolderPlaceholder") result.push(parseDocument(`${folder}/${item.name}`, item.name,
         Number((item.metadata as { size?: number } | null)?.size ?? 0), item.created_at ?? new Date().toISOString()));
     }
     if (!data || data.length < 100) break;
   }
-  return result.sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
+  try {
+    if (await blobEnabled()) {
+      const objects = await listBlobObjects("documents", `${folder}/`);
+      for (const object of objects) {
+        const name = object.key.slice(folder.length + 1);
+        if (!name || name.includes("/") || name === ".emptyFolderPlaceholder") continue;
+        result.push(parseDocument(blobPathFor("documents", object.key), name,
+          object.size, object.lastModified || new Date().toISOString()));
+      }
+    }
+  } catch {
+    /* legacy documents still list when B2 is unreachable */
+  }
+  const seen = new Set<string>();
+  return result
+    .filter((document) => (seen.has(document.path) ? false : (seen.add(document.path), true)))
+    .sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
 }
 
 export async function uploadDocument(
@@ -186,6 +222,7 @@ export async function uploadDocument(
   const invalid = validateFile(file, DOCUMENT_TYPES, MAX_DOCUMENT_BYTES);
   if (invalid) throw new Error(invalid);
   const path = `${docFolder(userId)}/${Date.now()}${SEP}${safeName(category)}${SEP}${newStorageId()}-${safeName(file.name)}`;
+  if (await blobEnabled()) return putBlob("documents", path, file, file.type);
   const { error } = await supabase.storage
     .from(DOCUMENT_BUCKET)
     .upload(path, file, { contentType: file.type, upsert: false });
@@ -195,6 +232,7 @@ export async function uploadDocument(
 
 export async function documentUrl(path: string, download = false): Promise<string> {
   const name = path.split("/").pop()?.split(SEP).slice(2).join(SEP) || undefined;
+  if (isBlobPath(path)) return signedBlobUrl(path, { download, name });
   const { data, error } = await supabase.storage
     .from(DOCUMENT_BUCKET)
     .createSignedUrl(path, 60 * 10, download ? { download: name ?? true } : undefined);
@@ -204,16 +242,20 @@ export async function documentUrl(path: string, download = false): Promise<strin
 
 export async function editDocument(userId: string, document: ProfileDocument, name: string, category: DocumentCategory): Promise<void> {
   const folder = docFolder(userId);
-  if (!document.path.startsWith(`${folder}/`) || document.path.slice(folder.length + 1).includes("/")) throw new Error("Only your own documents may be edited.");
+  const remote = parseBlobPath(document.path);
+  const current = remote ? remote.key : document.path;
+  if (!current.startsWith(`${folder}/`) || current.slice(folder.length + 1).includes("/")) throw new Error("Only your own documents may be edited.");
   if (!name.trim() || !DOCUMENT_CATEGORIES.includes(category)) throw new Error("Enter a document name and valid category.");
-  const stamp = document.path.split("/").pop()!.split(SEP)[0];
+  const stamp = current.split("/").pop()!.split(SEP)[0];
   const path = `${folder}/${stamp}${SEP}${safeName(category)}${SEP}${safeName(name.trim())}`;
-  if (path === document.path) return;
+  if (path === current) return;
+  if (remote) return moveBlob("documents", current, path);
   const { error } = await supabase.storage.from(DOCUMENT_BUCKET).move(document.path, path);
   if (error) throw new Error(explain(error.message));
 }
 
 export async function deleteDocument(path: string): Promise<void> {
+  if (isBlobPath(path)) return deleteBlob(path);
   const { error } = await supabase.storage.from(DOCUMENT_BUCKET).remove([path]);
   if (error) throw new Error(explain(error.message));
 }

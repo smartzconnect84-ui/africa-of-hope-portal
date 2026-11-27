@@ -13,6 +13,7 @@ import { cn } from "@/aoh/lib/utils";
 import ClassworkDialog from "./ClassworkDialog";
 import { academicApi, TRAINING_MATERIAL_ACCEPT, MAX_TRAINING_MATERIAL_BYTES, SUPPORTED_TRAINING_MATERIAL_MIME_TYPES } from "@/aoh/lib/academics";
 import { supabase } from "@/aoh/integrations/supabase/client";
+import { isBlobPath, signedBlobUrl } from "@/aoh/lib/blobStore";
 
 /** Student hand-in (text, reference and private file upload) and staff marking inbox. */
 export default function AssignmentInbox() {
@@ -134,9 +135,13 @@ export default function AssignmentInbox() {
     if (!popup) { toast.error("Allow pop-ups to open homework attachments."); return; }
     popup.opener = null;
     try {
-      const { data, error } = await supabase.storage.from("classwork-submissions").createSignedUrl(path, 600, { download: true });
-      if (error || !data) throw new Error(error?.message ?? "Could not open the attachment.");
-      popup.location.replace(data.signedUrl);
+      if (isBlobPath(path)) {
+        popup.location.replace(await signedBlobUrl(path, { download: true }));
+      } else {
+        const { data, error } = await supabase.storage.from("classwork-submissions").createSignedUrl(path, 600, { download: true });
+        if (error || !data) throw new Error(error?.message ?? "Could not open the attachment.");
+        popup.location.replace(data.signedUrl);
+      }
     } catch (error) {
       popup.close(); toast.error(error instanceof Error ? error.message : "Could not open the attachment.");
     }
