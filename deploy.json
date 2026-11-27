@@ -1,6 +1,6 @@
 {
   "entrypoint": "index.js",
-  "compatibilityDate": "2026-11-26",
+  "compatibilityDate": "2026-11-27",
   "modules": [
     {
       "name": "index.js",
