@@ -1,13 +1,11 @@
 /* AFRICA OF HOPE — PWA service worker.
- * OneSignal coexistence: the official OneSignal worker code is loaded first
- * (guarded — offline/CDN failure keeps PWA caching fully working), then the
- * existing AFRICA OF HOPE caches below. /OneSignalSDKWorker.js re-imports
- * this file, so whichever registration the browser keeps serves BOTH push
- * and offline. See src/lib/onesignal.ts.
+ * Live push is VAPID (RFC 8291): this worker's own `push` handler below draws
+ * every notification, and the VAPID sender only needs it registered at scope
+ * "/". The OneSignal SDK worker is deliberately NOT imported any more — the
+ * OneSignal web SDK is disabled (src/aoh/lib/onesignal.ts) because a browser
+ * allows one push subscription per worker, and a second handler would compete
+ * for the same push events.
  */
-try {
-  importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
-} catch (e) { /* offline first install: PWA logic below still runs */ }
 
 /* AFRICA OF HOPE — PWA service worker (continued).
  *

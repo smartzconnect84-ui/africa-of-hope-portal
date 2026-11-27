@@ -17,6 +17,7 @@ const _aohPortalViewsLive = PORTAL_VIEWS.length + PORTAL_NAV_GROUPS.length;
 const PublicMarketingSite = lazy(() => import("./components/PublicMarketingSite"));
 import AuthPortal, { PasswordRecoveryDialog, type AuthTab } from "./components/AuthPortal";
 import OfflineBanner from "./components/pwa/OfflineBanner";
+import PushPermissionPrompt from "./components/pwa/PushPermissionPrompt";
 import LivePushHost from "./components/LivePushHost";
 import BroadcastHost from "./components/BroadcastHost";
 import ProfileHost from "./components/ProfileHost";
@@ -32,7 +33,7 @@ const CurrencyConverter = lazy(() => import("./components/CurrencyConverter"));
 import { Button } from "@/aoh/components/ui/button";
 import { applyPublicBranding } from './lib/publicBranding';
 import { consumePendingPushView, resolvePushDestination, takeLaunchPushTarget } from '@/aoh/lib/androidPush';
-import { initOneSignalClickRouting, oneSignalLogin } from '@/aoh/lib/onesignal';
+import { initOneSignalClickRouting, oneSignalLogin, oneSignalUserTags } from '@/aoh/lib/onesignal';
 import { applySearchConsoleVerification } from '@/aoh/lib/seo';
 import { initNativeOneSignal } from '@/aoh/lib/nativeOneSignal';
 
@@ -170,6 +171,7 @@ function Portal({ onExitToPublic, initialTab }: { onExitToPublic: () => void; in
         </Suspense>
       </div>
     </Navigation>
+    <PushPermissionPrompt />
     </KnockProviderShell>
   );
 }
@@ -192,8 +194,8 @@ function Shell() {
   // that card was unreachable by targeted push even with a subscription.
   useEffect(() => {
     if (!currentUser?.id) return;
-    void oneSignalLogin(currentUser.id).catch(() => undefined);
-  }, [currentUser?.id]);
+    void oneSignalLogin(currentUser.id, oneSignalUserTags(currentUser.role)).catch(() => undefined);
+  }, [currentUser?.id, currentUser?.role]);
 
   // Apply the CMS-configured academy name / favicon at runtime so a change
   // published from the CMS shows up without a rebuild. Only drives

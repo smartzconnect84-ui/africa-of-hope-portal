@@ -28,6 +28,14 @@ const SAFARI_WEB_ID_KEY = "VITE_ONESIGNAL_SAFARI_WEB_ID";
 const DEFAULT_APP_ID = "1c7444cf-8299-48c3-adf7-0d1b32dbed7b";
 const DEFAULT_SAFARI_WEB_ID = "web.onesignal.auto.3431b9a6-8377-4186-9b23-bf65dbb4a731";
 
+/**
+ * Live push on the web is delivered with VAPID (lib/webPush.ts) on the app's own
+ * service worker. A browser allows exactly one push subscription per worker, so
+ * the OneSignal Web SDK must not load and claim it — that would silently kill
+ * VAPID delivery. The native (APK) SDK is separate and stays in use.
+ */
+const ONESIGNAL_WEB_ENABLED = false;
+
 let initPromise: Promise<boolean> | null = null;
 let scriptPromise: Promise<void> | null = null;
 
@@ -108,6 +116,7 @@ export function initOneSignal(): Promise<boolean> {
     try {
       if (isNativeWrapper()) return false;
     } catch { /* fall through to web path */ }
+    if (!ONESIGNAL_WEB_ENABLED) return false;
     const appId = oneSignalAppId();
     if (!appId || typeof window === "undefined") return false;
     if (!pushSupported()) return false;
@@ -208,6 +217,28 @@ export async function oneSignalLogin(userId: string, tags?: Record<string, strin
   if (tags && Object.keys(tags).length) {
     try { await OS.User?.addTags?.(tags); } catch { /* non-fatal */ }
   }
+}
+
+/**
+ * Map a portal role to the audience tag the server's OneSignal filters use
+ * (`role=students|teachers|admins|staff`). Without this tag, an admin send to
+ * "Students" matches no subscription at all, even when the device is subscribed.
+ */
+export function oneSignalAudienceTag(role?: string | null): "students" | "teachers" | "admins" | "staff" | null {
+  const r = String(role ?? "").toLowerCase().replace(/[^a-z]+/g, "");
+  if (!r) return null;
+  if (r.includes("student")) return "students";
+  if (r.includes("teacher") || r.includes("instructor") || r.includes("lecturer")) return "teachers";
+  if (r.includes("admin") || r.includes("registrar") || r.includes("director")) return "admins";
+  return "staff";
+}
+
+/** Identity + audience tags for one member, merged with any extra trusted tags. */
+export function oneSignalUserTags(role?: string | null, extra?: Record<string, string>): Record<string, string> {
+  const tags: Record<string, string> = { ...(extra ?? {}) };
+  const audience = oneSignalAudienceTag(role);
+  if (audience) tags.role = audience;
+  return tags;
 }
 
 /** Set trusted targeting tags (role / courses / categories). Server re-validates. */

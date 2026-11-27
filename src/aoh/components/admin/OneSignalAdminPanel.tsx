@@ -21,7 +21,7 @@ function senderRole(role: string) {
 /**
  * Admin-only OneSignal composer + send history.
  * Mount this inside the existing admin/operations hub (staff-only route).
- * All sends go through the authorized `onesignal-send` Edge Function;
+ * All sends go through the authorized `push-send` Edge Function (VAPID);
  * RLS + server role checks block students and broadcast abuse.
  */
 export default function OneSignalAdminPanel() {
@@ -59,7 +59,7 @@ export default function OneSignalAdminPanel() {
       if (!window.confirm(`Send push to "${audience}" now?\n\n${title}\n${message.slice(0, 140)}`)) return;
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) { setNotice("Your session expired. Sign in again."); return; }
-      const res = await supabase.functions.invoke("onesignal-send", {
+      const res = await supabase.functions.invoke("push-send", {
         body: {
           title: title.trim(), message: message.trim(), url: url.startsWith("/") ? url : "/",
           audience, idempotency_key: draftKey,
@@ -67,7 +67,7 @@ export default function OneSignalAdminPanel() {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if ((res as any)?.error) throw new Error((res as any).error.message || "Send failed");
-      setNotice("Accepted by OneSignal and queued. Delivery depends on each device (browser, OS, network). In-app records were stored for direct recipients.");
+      setNotice("Queued for live push and stored in the portal. Each device gets it within seconds; delivery still depends on the device (browser permission, OS, network).");
       setMessage("");
       setDraftKey(newDraftKey());
       await loadHistory();

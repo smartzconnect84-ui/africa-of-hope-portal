@@ -1,18 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Bell, X } from "lucide-react";
 import { useApp } from "@/aoh/context/AppContext";
-import {
-  isOneSignalConfigured,
-  oneSignalLogin,
-  oneSignalOptIn,
-  oneSignalStatus,
-} from "@/aoh/lib/onesignal";
+import { enableWebPush, webPushState, webPushSupported } from "@/aoh/lib/webPush";
 
 const DISMISSED_KEY = "aoh-push-prompt-dismissed-at";
 const DECLINED_KEY = "aoh-push-prompt-declined";
 
 function supported() {
-  return typeof window !== "undefined" && window.isSecureContext && "Notification" in window;
+  return webPushSupported();
 }
 
 export default function PushPermissionPrompt() {
@@ -26,10 +21,9 @@ export default function PushPermissionPrompt() {
   const [declined, setDeclined] = useState(() => {
     try { return localStorage.getItem(DECLINED_KEY) === "1"; } catch { return false; }
   });
-  // Browser permission is not the same thing as a push subscription. OneSignal
-  // holds the deliverable subscription; granting the OS prompt alone leaves no
-  // player, which is why pushes answered "All included players are not
-  // subscribed" while the UI showed permission "granted".
+  // Browser permission is not the same thing as a push subscription: granting
+  // the OS prompt alone leaves nothing for the server to deliver to, so the
+  // prompt stays visible until a real subscription is stored.
   const subscribedRef = useRef(false);
 
   // Re-read the real subscription state. Keeps the prompt visible for members
@@ -42,20 +36,15 @@ export default function PushPermissionPrompt() {
       subscribedRef.current = false;
       return false;
     }
-    if (!isOneSignalConfigured()) {
-      // Nothing to subscribe to; hide and behave as done.
-      subscribedRef.current = true;
-      return true;
-    }
     try {
-      const status = await oneSignalStatus();
-      subscribedRef.current = Boolean(status.subscribed);
-      return Boolean(status.subscribed);
+      const state = await webPushState(currentUser?.id);
+      subscribedRef.current = state.subscribed;
+      return state.subscribed;
     } catch {
       subscribedRef.current = false;
       return false;
     }
-  }, []);
+  }, [currentUser?.id]);
 
   useEffect(() => {
     if (!supported() || declined) return;
@@ -80,7 +69,7 @@ export default function PushPermissionPrompt() {
     };
   }, [declined, refresh, currentUser?.id]);
 
-  if (!supported() || declined || !visible) return null;
+  if (!supported() || declined || !visible || !currentUser?.id) return null;
 
   const alreadyGranted = permission === "granted";
 
@@ -91,27 +80,19 @@ export default function PushPermissionPrompt() {
       // Ask the OS inside the click gesture first, then create the actual
       // OneSignal push subscription. Requesting permission alone never
       // subscribes the device.
-      if (Notification.permission === "default") {
-        const result = await Notification.requestPermission();
-        setPermission(result);
-        if (result === "denied") {
+      if (!currentUser?.id) return;
+      const outcome = await enableWebPush(currentUser.id);
+      setPermission(Notification.permission);
+      if (!outcome.subscribed) {
+        if (Notification.permission === "denied") {
           try { localStorage.setItem(DECLINED_KEY, "1"); } catch { /* ignore */ }
           setDeclined(true);
           setVisible(false);
-          return;
         }
-      }
-      const outcome = await oneSignalOptIn();
-      if (!outcome.subscribed) {
         // Honest failure: keep the prompt up so the member can retry instead
         // of silently believing notifications are on.
         setNotice(outcome.message);
         return;
-      }
-      if (currentUser?.id) {
-        // Re-link identity now that a player exists, so targeted pushes match
-        // this Supabase user id.
-        try { await oneSignalLogin(currentUser.id); } catch { /* best-effort */ }
       }
       subscribedRef.current = true;
       setVisible(false);

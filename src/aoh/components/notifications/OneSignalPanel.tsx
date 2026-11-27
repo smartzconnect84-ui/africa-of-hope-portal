@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import { BellRing, BellOff, Loader2, ShieldCheck, Smartphone } from "lucide-react";
 import { Button } from "@/aoh/components/ui/button";
-import {
-  initOneSignal, isOneSignalConfigured, oneSignalOptIn, oneSignalOptOut,
-  oneSignalLogin, oneSignalLogout, oneSignalSetTags, oneSignalStatus, oneSignalHowLockScreenWorks,
-} from "@/aoh/lib/onesignal";
+import { oneSignalHowLockScreenWorks } from "@/aoh/lib/onesignal";
+import { disableWebPush, enableWebPush, webPushState, webPushSupported } from "@/aoh/lib/webPush";
 import {
   initNativeOneSignal, nativeLogin, nativeLogout, nativeOptIn, nativeOptOut,
   nativeRequestPermission, nativeStatus, isNativeWrapper,
@@ -15,42 +13,45 @@ import { isIos, isStandalone } from "@/aoh/lib/pwa";
 function safeMsg(e: unknown) { return e instanceof Error ? e.message : "Request failed"; }
 
 /**
- * OneSignal subscription card. Renders inside portal dashboards for every role.
+ * Live push subscription card. Renders inside portal dashboards for every role.
  * - Loads lazily, never blocks render, never auto-prompts.
- * - After sign-in links Supabase user id + trusted role/course tags.
+ * - Web: VAPID subscription on the app's own service worker, stored in
+ *   push_subscriptions and delivered by the `push-send` Edge Function.
+ * - APK: the native OneSignal SDK owns permission and delivery.
  */
 export default function OneSignalPanel({ compact = false }: { compact?: boolean }) {
   const { currentUser } = useApp();
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [status, setStatus] = useState<{ subscribed: boolean; permission: string } | null>(null);
-  const configured = isOneSignalConfigured();
+  const native = isNativeWrapper();
+  const supported = native || webPushSupported();
 
   const refresh = async () => {
     try {
-      if (isNativeWrapper()) {
+      if (native) {
         const s = await nativeStatus();
         setStatus({ subscribed: s.subscribed, permission: s.permission });
         return;
       }
-      const s = await oneSignalStatus();
-      setStatus({ subscribed: s.subscribed, permission: String(s.permission) });
+      const s = await webPushState(currentUser?.id);
+      setStatus({ subscribed: s.subscribed, permission: s.permissionLabel });
     } catch { /* best-effort */ }
   };
 
   useEffect(() => {
     void initNativeOneSignal().then(() => void refresh()).catch(() => undefined);
-    void initOneSignal().then(() => void refresh());
-    // Link identity once per sign-in with trusted role + course tags.
-    // Both calls are safe on either platform (each no-ops off its platform).
+    void refresh();
+    if (!native) return;
+    // Only the APK links a OneSignal identity; web delivery is VAPID and needs
+    // no player id. Never call the OneSignal web SDK here — it would take over
+    // the browser's single push subscription.
     if (currentUser?.id) {
-      const tags: Record<string, string> = { role: roleTag(currentUser.role) };
+      const tags: Record<string, string> = {};
       for (const pid of (currentUser.programIds ?? []).slice(0, 8)) tags[`course_${pid}`] = "enrolled";
-      void oneSignalLogin(currentUser.id, tags).then(() => void oneSignalSetTags(tags)).catch(() => undefined);
       void nativeLogin(currentUser.id, tags).catch(() => undefined);
     } else {
       void nativeLogout().catch(() => undefined);
-      void oneSignalLogout().catch(() => undefined);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.id]);
@@ -58,30 +59,29 @@ export default function OneSignalPanel({ compact = false }: { compact?: boolean 
   const enable = async () => {
     setBusy(true); setNotice("");
     try {
-      // Inside the APK wrapper the native OneSignal SDK owns permission +
-      // subscription (Android 13 POST_NOTIFICATIONS included). On the web
-      // the Web SDK owns it. Each helper no-ops off its own platform.
-      if (isNativeWrapper()) {
+      if (native) {
         const p = await nativeRequestPermission();
         if (!p) { setNotice("Notifications are blocked for this app. Allow them in Android Settings → Apps → AFRICA OF HOPE → Notifications, then retry."); return; }
         const r = await nativeOptIn();
         setNotice(r.message);
       } else {
-        const r = await oneSignalOptIn();
+        if (!currentUser?.id) { setNotice("Sign in first, then enable notifications."); return; }
+        const r = await enableWebPush(currentUser.id);
         setNotice(r.message);
       }
       await refresh();
     } catch (e) { setNotice(safeMsg(e)); }
     finally { setBusy(false); }
   };
+
   const disable = async () => {
     setBusy(true); setNotice("");
     try {
-      if (isNativeWrapper()) {
+      if (native) {
         await nativeOptOut();
         setNotice("Push disabled in the APK. Portal messages and in-app history still work.");
       } else {
-        await oneSignalOptOut();
+        await disableWebPush(currentUser?.id);
         setNotice("Push disabled on this device. Portal messages and in-app history still work.");
       }
       await refresh();
@@ -89,12 +89,12 @@ export default function OneSignalPanel({ compact = false }: { compact?: boolean 
     finally { setBusy(false); }
   };
 
-  if (!configured) {
+  if (!supported) {
     if (compact) return null;
     return (
       <section aria-label="Phone notifications" className="rounded-xl border border-dashed p-4 text-sm opacity-90">
-        <p className="font-semibold flex items-center gap-2"><Smartphone size={16} /> Phone notifications (not configured)</p>
-        <p className="mt-1 text-muted-foreground">An administrator needs to add the OneSignal App ID. In-app messages and deadline reminders below still work.</p>
+        <p className="font-semibold flex items-center gap-2"><Smartphone size={16} /> Phone notifications (not supported here)</p>
+        <p className="mt-1 text-muted-foreground">This browser cannot receive push notifications. Use Chrome, Edge, Firefox, or add this site to your Home Screen on iPhone/iPad. In-app messages and deadline reminders below still work.</p>
       </section>
     );
   }
@@ -121,12 +121,4 @@ export default function OneSignalPanel({ compact = false }: { compact?: boolean 
       {notice && <p role="status" className="rounded bg-muted px-2 py-1.5">{notice}</p>}
     </section>
   );
-}
-
-function roleTag(role: unknown): string {
-  const r = String(role ?? "").toLowerCase();
-  if (r.includes("teacher") || r.includes("instruct")) return "teachers";
-  if (r.includes("admin") || r.includes("registrar")) return "admins";
-  if (r.includes("support") || r.includes("admission") || r.includes("staff")) return "staff";
-  return "students";
 }

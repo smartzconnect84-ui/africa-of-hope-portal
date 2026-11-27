@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/aoh/integrations/supabase/client";
 import { isIos, isStandalone } from "@/aoh/lib/pwa";
-import { oneSignalLogin, oneSignalOptIn } from "@/aoh/lib/onesignal";
+import { vapidPublicKey } from "@/aoh/lib/webPush";
 
 const BRAND_ICON = "https://files.monstarx.app/jk0454jkv1/public/uploads/chat/7ynjatu3oi/Aoh-favicon.png";
 export type ReminderKind = "lesson" | "assignment" | "fee" | "announcement";
@@ -113,26 +113,11 @@ export function useReminderNotifications(userId: string | undefined, items: Remi
       setPermission(result); setHelp(notificationHelp());
       if (result !== "granted") { setNotice(result === "denied" ? notificationHelp() : "Permission was not granted. Tap Enable when you are ready."); return; }
       const next = { ...prefsRef.current, enabled: true }; save(next);
-      const key = (import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined)?.trim();
+      // Live push is VAPID: this device's subscription on the app worker, stored
+      // in push_subscriptions and delivered by the `push-send` Edge Function.
+      const key = vapidPublicKey();
       const worker = await workerReady();
-      if (!key || !worker.pushManager) {
-        // Device push in this deployment goes through OneSignal, which owns the
-        // web-push sender, so no VAPID key of our own is needed. Opt the device
-        // in there instead of stopping at "open-app notifications only".
-        void syncSettings(next).catch(() => undefined);
-        // Link the Supabase identity before opting in, so this subscription is
-        // addressable by targeted pushes (messages, grades, fees), not only by
-        // broadcasts. Sign-in already links it; this covers a device that was
-        // signed in before the identity was linked.
-        await oneSignalLogin(userId);
-        const opted = await oneSignalOptIn();
-        if (owner.current !== userId) return;
-        setPushState(opted.subscribed ? "subscribed" : "device");
-        setNotice(opted.subscribed
-          ? "This device is registered for push — messages, fees, grades, attendance and announcements arrive even when the app is closed."
-          : opted.message);
-        return;
-      }
+      if (!worker.pushManager) throw new Error("This browser cannot create a push subscription.");
       const sub = await worker.pushManager.getSubscription() ?? await worker.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: publicKeyBytes(key) as unknown as BufferSource });
       const json = sub.toJSON();
       const { error } = await supabase.from("push_subscriptions").upsert({ user_id: userId, endpoint: sub.endpoint, p256dh: json.keys?.p256dh, auth: json.keys?.auth, user_agent: navigator.userAgent.slice(0, 500), enabled: true, preferences: next, updated_at: new Date().toISOString() }, { onConflict: "endpoint" });
