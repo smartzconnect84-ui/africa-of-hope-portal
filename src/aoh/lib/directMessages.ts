@@ -112,7 +112,9 @@ export function useUnreadDMs(userId: string | undefined) {
           .select("id", { count: "exact", head: true })
           .eq("receiver_id", me)
           .is("seen_at", null);
-        if (!error && typeof count === "number") setUnread((prev) => Math.max(prev, count));
+        // For real accounts the database is authoritative: a stale local
+        // cache must not keep the badge higher than the true unread count.
+        if (!error && typeof count === "number") setUnread(count);
       } catch {
         /* offline — the local count stands */
       }
@@ -153,6 +155,7 @@ export function useDirectMessages(meId: string | undefined, peerId: string | und
   const [messages, setMessages] = useState<DMMessage[]>([]);
   const [peerTyping, setPeerTyping] = useState(false);
   const [sending, setSending] = useState(false);
+  const sendingRef = useRef(false);
   const [failed, setFailed] = useState<string | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const typingTimer = useRef<number | undefined>(undefined);
@@ -189,10 +192,12 @@ export function useDirectMessages(meId: string | undefined, peerId: string | und
           .from("direct_messages")
           .select("id,sender_id,receiver_id,body,created_at,seen_at")
           .or(`and(sender_id.eq.${meId},receiver_id.eq.${peerId}),and(sender_id.eq.${peerId},receiver_id.eq.${meId})`)
-          .order("created_at", { ascending: true })
+          // Newest first, then reversed: an old ascending window hid new
+          // messages once a conversation passed 300 rows.
+          .order("created_at", { ascending: false })
           .limit(300);
         if (cancelled || error || !Array.isArray(data)) return;
-        const merged = mergeRows(loadLocal(cid), data as DMMessage[]);
+        const merged = mergeRows(loadLocal(cid), (data as DMMessage[]).reverse());
         if (!cancelled) {
           rowsRef.current = merged;
           setMessages(merged);
@@ -253,7 +258,19 @@ export function useDirectMessages(meId: string | undefined, peerId: string | und
               (row.sender_id === peerId && row.receiver_id === meId);
             if (!mine || !active) return;
             if (change.eventType === "INSERT") {
-              const merged = mergeRows(rowsRef.current, [row]);
+              // The optimistic copy may already be on screen with its local id;
+              // replace it instead of showing the same message twice.
+              const duplicate = rowsRef.current.findIndex(
+                (m) =>
+                  m.id !== row.id &&
+                  m.sender_id === row.sender_id &&
+                  m.body === row.body &&
+                  Math.abs(+new Date(m.created_at) - +new Date(row.created_at)) < 60_000,
+              );
+              const merged =
+                duplicate >= 0
+                  ? rowsRef.current.map((m, index) => (index === duplicate ? row : m))
+                  : mergeRows(rowsRef.current, [row]);
               rowsRef.current = merged;
               setMessages(merged);
               persistLocal(cid, merged);
@@ -302,7 +319,8 @@ export function useDirectMessages(meId: string | undefined, peerId: string | und
   const send = useCallback(
     async (text: string): Promise<boolean> => {
       const body = text.trim();
-      if (!body || !meId || !peerId || !cid || sending) return false;
+      if (!body || !meId || !peerId || !cid || sendingRef.current) return false;
+      sendingRef.current = true;
       setSending(true);
       setFailed(null);
       const msg: DMMessage = {
@@ -360,6 +378,7 @@ export function useDirectMessages(meId: string | undefined, peerId: string | und
       // notifications_queue_push trigger queues it for the pg_cron dispatcher,
       // which pushes it even if this tab is closed. Sending from both places
       // would deliver the same message twice.
+      sendingRef.current = false;
       setSending(false);
       if (!delivered) {
         // Kept locally and retried on the next send/poll — surfaced honestly.
@@ -367,7 +386,7 @@ export function useDirectMessages(meId: string | undefined, peerId: string | und
       }
       return true;
     },
-    [cid, meId, peerId, sending],
+    [cid, meId, peerId],
   );
 
   const sendTyping = useCallback(() => {

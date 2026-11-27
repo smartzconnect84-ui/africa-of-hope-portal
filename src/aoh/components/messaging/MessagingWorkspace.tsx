@@ -49,7 +49,7 @@ function EmptyPane({ onNewChat, onNewGroup, canCreateGroup }: { onNewChat: () =>
         </button>
       </div>
       <p className="mt-6 inline-flex items-center gap-1.5 text-[11px] text-slate-400">
-        <Search className="h-3.5 w-3.5" /> Search chats, people and message text from the panel on the left.
+        <Search className="h-3.5 w-3.5" /> Search conversations and message text from the panel on the left.
       </p>
     </div>
   );
@@ -267,7 +267,9 @@ export default function MessagingWorkspace() {
         <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Forward message</DialogTitle>
-            <DialogDescription>Send a copy of this message to another conversation.</DialogDescription>
+            <DialogDescription>
+              Send a copy of the text to another conversation. Attachments stay in their original chat.
+            </DialogDescription>
           </DialogHeader>
           {forwarding && (
             <p className="rounded-lg border-l-[3px] border-[#25d366] bg-slate-50 px-3 py-2 text-[12px] text-slate-600">
@@ -281,6 +283,10 @@ export default function MessagingWorkspace() {
                   type="button"
                   onClick={async () => {
                     if (!forwarding) return;
+                    if (!forwarding.body.trim()) {
+                      toast.error("Only text messages can be forwarded.");
+                      return;
+                    }
                     const target =
                       conversation.kind === "dm" && conversation.peerId
                         ? ({ kind: "dm", peerId: conversation.peerId } as const)

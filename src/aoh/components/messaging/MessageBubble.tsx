@@ -13,6 +13,7 @@ import {
   Pencil,
   Pin,
   Play,
+  RefreshCw,
   Reply,
   Star,
   Trash2,
@@ -150,6 +151,7 @@ function highlight(text: string, query?: string): ReactNode {
 
 export interface BubbleActions {
   onReply: (message: Message) => void;
+  onRetry: (message: Message) => void;
   onEdit: (message: Message) => void;
   onDelete: (message: Message) => void;
   onStar: (message: Message) => void;
@@ -185,6 +187,7 @@ export default function MessageBubble({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [tools, setTools] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const pref = useTranslatePref();
   const [translation, setTranslation] = useState<string | null>(null);
   const [translating, setTranslating] = useState(false);
@@ -206,14 +209,36 @@ export default function MessageBubble({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pref.target, pref.auto, wantTranslation, message.body]);
   const pressTimer = useRef<number | undefined>(undefined);
+  const pressOrigin = useRef<{ x: number; y: number } | null>(null);
   const deleted = !!message.deleted_at;
   const cancelPress = () => window.clearTimeout(pressTimer.current);
   const startPress = (e: ReactPointerEvent) => {
     if (deleted || (e.target as HTMLElement).closest("button,a,audio,video")) return;
     cancelPress();
+    pressOrigin.current = { x: e.clientX, y: e.clientY };
     pressTimer.current = window.setTimeout(() => setTools(true), 450);
   };
+  // A finger that moves is scrolling, not long-pressing.
+  const trackPress = (e: ReactPointerEvent) => {
+    const origin = pressOrigin.current;
+    if (!origin) return;
+    if (Math.abs(e.clientX - origin.x) > 10 || Math.abs(e.clientY - origin.y) > 10) {
+      cancelPress();
+      pressOrigin.current = null;
+    }
+  };
   useEffect(() => () => window.clearTimeout(pressTimer.current), []);
+  useEffect(() => {
+    if (!tools && !menuOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setTools(false);
+      setMenuOpen(false);
+      setConfirmDelete(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [tools, menuOpen]);
 
   return (
     <div className={cn("group flex w-full gap-1.5", mine ? "justify-end" : "justify-start")}>
@@ -228,9 +253,10 @@ export default function MessageBubble({
       <div
         className={cn("relative max-w-[86%] select-none sm:max-w-[75%]", mine ? "items-end" : "items-start")}
         onPointerDown={startPress}
-        onPointerUp={cancelPress}
-        onPointerLeave={cancelPress}
-        onPointerCancel={cancelPress}
+        onPointerMove={trackPress}
+        onPointerUp={() => { cancelPress(); pressOrigin.current = null; }}
+        onPointerLeave={() => { cancelPress(); pressOrigin.current = null; }}
+        onPointerCancel={() => { cancelPress(); pressOrigin.current = null; }}
         onContextMenu={(e) => { if (!deleted) { e.preventDefault(); setTools(true); } }}
       >
         {/* long-press toolbar: reactions stay hidden until the message is pressed and held */}
@@ -240,7 +266,7 @@ export default function MessageBubble({
             type="button"
             className="fixed inset-0 z-10 cursor-default"
             aria-label="Close reactions"
-            onClick={() => { setTools(false); setMenuOpen(false); }}
+                          onClick={() => { setTools(false); setMenuOpen(false); setConfirmDelete(false); }}
           />
           <div
             className={cn(
@@ -261,7 +287,7 @@ export default function MessageBubble({
             ))}
             <button
               type="button"
-              onClick={() => actions.onReply(message)}
+              onClick={() => { setTools(false); actions.onReply(message); }}
               aria-label="Reply"
               className="grid h-7 w-7 place-items-center rounded-full text-slate-500 transition hover:bg-slate-100"
             >
@@ -286,46 +312,85 @@ export default function MessageBubble({
               type="button"
               className="fixed inset-0 z-30 cursor-default"
               aria-label="Close message actions"
-              onClick={() => setMenuOpen(false)}
+              onClick={() => { setMenuOpen(false); setConfirmDelete(false); }}
             />
-            <div
-              className={cn(
-                "absolute -top-8 z-40 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 text-[12px] text-slate-700 shadow-xl",
-                mine ? "right-8" : "left-8",
-              )}
-            >
-              {[
-                { label: "Reply", icon: Reply, run: () => actions.onReply(message) },
-                { label: "Copy text", icon: Copy, run: () => actions.onCopy(message) },
-                ...(message.body.trim()
-                  ? [{ label: translation ? "Show original" : "Translate", icon: Languages, run: () => { if (translation) { setWantTranslation(false); setTranslation(null); } else setWantTranslation(true); } }]
-                  : []),
-                ...(message.body.trim()
-                  ? [{ label: "Forward", icon: Forward, run: () => actions.onForward(message) }]
-                  : []),
-                { label: message.starred ? "Remove star" : "Star message", icon: Star, run: () => actions.onStar(message) },
-                { label: message.pinned ? "Unpin" : "Pin message", icon: Pin, run: () => actions.onPin(message) },
-                ...(mine
-                  ? [
-                      { label: "Edit", icon: Pencil, run: () => actions.onEdit(message) },
-                      { label: "Delete", icon: Trash2, run: () => actions.onDelete(message) },
-                    ]
-                  : []),
-              ].map((item) => (
-                <button
-                  key={item.label}
-                  type="button"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    item.run();
-                  }}
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-slate-50"
-                >
-                  <item.icon className="h-3.5 w-3.5 text-slate-500" />
-                  {item.label}
-                </button>
-              ))}
-            </div>
+            {confirmDelete ? (
+              <div
+                role="alertdialog"
+                aria-label="Confirm delete"
+                className={cn(
+                  "absolute -top-8 z-40 w-60 rounded-xl border border-slate-200 bg-white p-2.5 text-[12px] text-slate-700 shadow-xl",
+                  mine ? "right-8" : "left-8",
+                )}
+              >
+                <p className="font-semibold text-slate-800">Delete this message?</p>
+                <p className="mt-0.5 text-[11px] leading-snug text-slate-500">
+                  Everyone in this chat will see that it was deleted.
+                </p>
+                <div className="mt-2 flex gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDelete(false)}
+                    className="h-8 flex-1 rounded-lg border border-slate-200 font-medium text-slate-600 hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setConfirmDelete(false);
+                      setMenuOpen(false);
+                      actions.onDelete(message);
+                    }}
+                    className="h-8 flex-1 rounded-lg bg-rose-600 font-semibold text-white hover:bg-rose-700"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div
+                className={cn(
+                  "absolute -top-8 z-40 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 text-[12px] text-slate-700 shadow-xl",
+                  mine ? "right-8" : "left-8",
+                )}
+              >
+                {[
+                  ...(mine && message.pending
+                    ? [{ label: "Retry sending", icon: RefreshCw, run: () => actions.onRetry(message) }]
+                    : []),
+                  { label: "Reply", icon: Reply, run: () => actions.onReply(message) },
+                  { label: "Copy text", icon: Copy, run: () => actions.onCopy(message) },
+                  ...(message.body.trim()
+                    ? [{ label: translation ? "Show original" : "Translate", icon: Languages, run: () => { if (translation) { setWantTranslation(false); setTranslation(null); } else setWantTranslation(true); } }]
+                    : []),
+                  ...(message.body.trim()
+                    ? [{ label: "Forward", icon: Forward, run: () => actions.onForward(message) }]
+                    : []),
+                  { label: message.starred ? "Remove star" : "Star message", icon: Star, run: () => actions.onStar(message) },
+                  { label: message.pinned ? "Unpin" : "Pin message", icon: Pin, run: () => actions.onPin(message) },
+                  ...(mine
+                    ? [
+                        { label: "Edit", icon: Pencil, run: () => actions.onEdit(message) },
+                        { label: "Delete", icon: Trash2, run: () => setConfirmDelete(true) },
+                      ]
+                    : []),
+                ].map((item) => (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={() => {
+                      if (item.label !== "Delete") setMenuOpen(false);
+                      item.run();
+                    }}
+                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left hover:bg-slate-50"
+                  >
+                    <item.icon className="h-3.5 w-3.5 text-slate-500" />
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </>
         )}
 
@@ -394,6 +459,18 @@ export default function MessageBubble({
               ) : (
                 <Check className="h-3.5 w-3.5 text-slate-500" aria-label="Sent" />
               ))}
+            {!deleted && (
+              <button
+                type="button"
+                onClick={() => { setMenuOpen(false); setTools(true); }}
+                aria-label="Message actions"
+                aria-haspopup="menu"
+                title="Message actions"
+                className="ml-0.5 grid h-5 w-5 place-items-center rounded-full text-slate-500 transition hover:bg-black/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25d366]/60 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
+              >
+                <MoreHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
+              </button>
+            )}
           </div>
         </div>
 

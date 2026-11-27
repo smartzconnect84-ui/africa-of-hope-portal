@@ -103,6 +103,10 @@ export default function ConversationPane({
 
   const scroller = useRef<HTMLDivElement>(null);
   const bottom = useRef<HTMLDivElement>(null);
+  // Only follow new messages when the reader is already at the bottom, so
+  // scrolling back through history is not yanked away by an incoming message.
+  const stickToBottom = useRef(true);
+  const [visibleTick, setVisibleTick] = useState(0);
 
   const byId = useMemo(() => new Map(users.map((user) => [user.id, user])), [users]);
   const peer = conversation.peerId ? byId.get(conversation.peerId) : undefined;
@@ -111,6 +115,7 @@ export default function ConversationPane({
   const groupOnline = (conversation.memberIds ?? []).filter((id) => onlineIds.includes(id)).length;
 
   useEffect(() => {
+    stickToBottom.current = true;
     setDraft(meId ? loadDraft(meId, cacheKey) : "");
     setReplyTo(null);
     setEditing(null);
@@ -122,19 +127,28 @@ export default function ConversationPane({
 
   const messages = thread.messages;
 
-  // Read receipts land as soon as the conversation is on screen.
+  // Read receipts land as soon as the conversation is on screen — including
+  // messages that arrived while the tab was in the background.
   useEffect(() => {
     if (!messages.length || document.hidden) return;
     if (!messages.some((message) => message.sender_id !== meId && !message.seen_at)) return;
     void thread.markSeen();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages.length, messages[messages.length - 1]?.id, meId]);
+  }, [messages.length, messages[messages.length - 1]?.id, meId, visibleTick]);
 
   useEffect(() => {
-    if (searchOpen) return;
+    const onVisibility = () => {
+      if (!document.hidden) setVisibleTick((value) => value + 1);
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, []);
+
+  useEffect(() => {
+    if (searchOpen || !stickToBottom.current) return;
     bottom.current?.scrollIntoView({ block: "end" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages.length, cacheKey]);
+  }, [messages.length, cacheKey, searchOpen]);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -192,26 +206,26 @@ export default function ConversationPane({
     window.setTimeout(() => setFlashId(null), 1800);
   }
 
-  async function submit({ body }: { body: string }) {
+  async function submit({ body }: { body: string }): Promise<boolean> {
     if (editing) {
       await thread.edit(editing.id, body);
       setEditing(null);
       setDraft("");
       if (meId) saveDraft(meId, cacheKey, "");
       onActivity();
-      return;
+      return true;
     }
     const ok = await thread.send({ body, replyTo: replyTo?.id ?? null });
     if (ok) {
+      stickToBottom.current = true;
       setReplyTo(null);
       onActivity();
-    } else {
-      setDraft(body);
     }
+    return ok;
   }
 
-  async function attach(file: File, caption: string, seconds?: number) {
-    if (!target) return;
+  async function attach(file: File, caption: string, seconds?: number): Promise<boolean> {
+    if (!target) return false;
     setUploading(true);
     setLocalError(null);
     try {
@@ -231,15 +245,19 @@ export default function ConversationPane({
         duration: type === "voice" ? Math.round(seconds ?? 0) : null,
       };
       const ok = await thread.send({ body: caption, attachment, replyTo: replyTo?.id ?? null });
-      if (!ok) setLocalError("The file uploaded, but the message could not be sent. Try again.");
-      else {
-        setReplyTo(null);
-        setDraft("");
-        if (meId) saveDraft(meId, cacheKey, "");
-        onActivity();
+      if (!ok) {
+        setLocalError("The file uploaded, but the message could not be sent. Try again.");
+        return false;
       }
+      stickToBottom.current = true;
+      setReplyTo(null);
+      setDraft("");
+      if (meId) saveDraft(meId, cacheKey, "");
+      onActivity();
+      return true;
     } catch (err) {
       setLocalError(chatErrorText(err, "The attachment could not be uploaded."));
+      return false;
     } finally {
       setUploading(false);
     }
@@ -254,8 +272,16 @@ export default function ConversationPane({
       setReplyTo(null);
       setEditing(message);
     },
+    onRetry: (message) => {
+      void thread.retry(message).then((ok) => {
+        if (ok) onActivity();
+      });
+    },
     onDelete: (message) => {
-      void thread.remove(message.id).then(onActivity);
+      void thread.remove(message.id).then(() => {
+        toast.success("Message deleted");
+        onActivity();
+      });
     },
     onStar: (message) => {
       void thread.toggleStar(message.id).then(onActivity);
@@ -268,7 +294,19 @@ export default function ConversationPane({
     },
     onCopy: (message) => {
       const text = message.body || message.attachment?.name || "";
-      if (text) void navigator.clipboard?.writeText(text).catch(() => undefined);
+      if (!text) {
+        toast.error("There is no text to copy in this message.");
+        return;
+      }
+      const clipboard = navigator.clipboard;
+      if (!clipboard) {
+        toast.error("Copying is not available in this browser.");
+        return;
+      }
+      clipboard
+        .writeText(text)
+        .then(() => toast.success("Message copied"))
+        .catch(() => toast.error("The message could not be copied."));
     },
     onForward: (message) => onForward(message),
   };
@@ -402,6 +440,11 @@ export default function ConversationPane({
 
       <div
         ref={scroller}
+        onScroll={(event) => {
+          const element = event.currentTarget;
+          stickToBottom.current =
+            element.scrollHeight - element.scrollTop - element.clientHeight < 96;
+        }}
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-3 sm:px-6"
         style={{
           backgroundImage: wallpaper ? `url(${wallpaper})` : WALLPAPER,
@@ -496,9 +539,9 @@ export default function ConversationPane({
           setDraft(value);
           if (meId) saveDraft(meId, cacheKey, value);
         }}
-        onSend={(payload) => void submit(payload)}
+        onSend={(payload) => submit(payload)}
         onTyping={thread.sendTyping}
-        onAttach={(file, caption, seconds) => void attach(file, caption, seconds)}
+        onAttach={(file, caption, seconds) => attach(file, caption, seconds)}
         replyTo={replyTo}
         editing={editing}
         onCancelReply={() => setReplyTo(null)}

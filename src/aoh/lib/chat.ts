@@ -730,6 +730,10 @@ export async function renameChatGroup(groupId: string, name: string, description
 
 // ── Attachments ───────────────────────────────────────────────────────────
 
+/** Chats stay bounded so a stray large video does not stall the upload. */
+export const MAX_CHAT_ATTACHMENT_MB = 25;
+export const MAX_CHAT_ATTACHMENT_BYTES = MAX_CHAT_ATTACHMENT_MB * 1024 * 1024;
+
 export async function uploadChatFile(input: {
   meId: string;
   peerId?: string;
@@ -738,6 +742,10 @@ export async function uploadChatFile(input: {
   fileName: string;
   type: ChatAttachmentType;
 }): Promise<{ path: string; name: string }> {
+  if (input.file.size === 0) throw new Error(`"${input.fileName}" is empty.`);
+  if (input.file.size > MAX_CHAT_ATTACHMENT_BYTES) {
+    throw new Error(`"${input.fileName}" is larger than ${MAX_CHAT_ATTACHMENT_MB} MB.`);
+  }
   const safeName = input.fileName.replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-80) || "attachment";
   const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const folder = input.groupId ? `group/${input.groupId}` : `dm/${input.meId}/${input.peerId}`;

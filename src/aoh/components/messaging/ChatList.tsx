@@ -3,7 +3,7 @@ import { MessageSquarePlus, Search, Users, X } from "lucide-react";
 import UserAvatar from "@/aoh/components/UserAvatar";
 import { displayRole } from "@/aoh/lib/roleDisplay";
 import { cn } from "@/aoh/lib/utils";
-import { conversationTime, type Conversation } from "@/aoh/lib/messaging";
+import { conversationTime, readLocalThread, threadCacheKey, type Conversation } from "@/aoh/lib/messaging";
 import type { User } from "@/aoh/types";
 
 type Filter = "all" | "unread" | "groups";
@@ -38,16 +38,33 @@ export default function ChatList({
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
+    const meId = currentUser?.id;
+    // Message bodies live in the per-thread cache; search them so the promise
+    // on the empty pane ("search message text") is actually true.
+    const bodyMatches = (conversation: Conversation) => {
+      if (!q || !meId) return false;
+      const key =
+        conversation.kind === "dm" && conversation.peerId
+          ? threadCacheKey(meId, { kind: "dm", peerId: conversation.peerId })
+          : conversation.groupId
+            ? threadCacheKey(meId, { kind: "group", groupId: conversation.groupId })
+            : "";
+      if (!key) return false;
+      return readLocalThread(key).some(
+        (message) => !message.deleted_at && message.body.toLowerCase().includes(q),
+      );
+    };
     return conversations.filter((conversation) => {
       if (filter === "unread" && conversation.unread === 0) return false;
       if (filter === "groups" && conversation.kind !== "group") return false;
       if (!q) return true;
       return (
         conversation.name.toLowerCase().includes(q) ||
-        (conversation.lastBody ?? "").toLowerCase().includes(q)
+        (conversation.lastBody ?? "").toLowerCase().includes(q) ||
+        bodyMatches(conversation)
       );
     });
-  }, [conversations, filter, query]);
+  }, [conversations, filter, query, currentUser?.id]);
 
   const filters: { id: Filter; label: string; count?: number }[] = [
     { id: "all", label: "All" },
@@ -127,7 +144,7 @@ export default function ChatList({
           >
             {item.label}
             {!!item.count && (
-              <span className="rounded-full bg-[#25d366] px-1.5 text-[10px] font-bold text-white">
+              <span className="rounded-full bg-[#0a7c68] px-1.5 text-[10px] font-bold text-white">
                 {item.count > 99 ? "99+" : item.count}
               </span>
             )}
@@ -221,7 +238,7 @@ export default function ChatList({
                       <span
                         className={cn(
                           "shrink-0 text-[11px]",
-                          conversation.unread > 0 ? "font-semibold text-[#25d366]" : "text-slate-400",
+                          conversation.unread > 0 ? "font-semibold text-[#0a7c68]" : "text-slate-400",
                         )}
                       >
                         {conversationTime(conversation.lastAt)}
@@ -229,10 +246,10 @@ export default function ChatList({
                     </span>
                     <span className="mt-0.5 flex items-center gap-2">
                       <span className="min-w-0 flex-1 truncate text-[12px] text-slate-500">
-                        {conversation.kind === "group" && conversation.lastBody ? conversation.lastBody : conversation.lastBody || "No messages yet"}
+                        {conversation.lastBody || "No messages yet"}
                       </span>
                       {conversation.unread > 0 && (
-                        <span className="grid h-5 min-w-[20px] shrink-0 place-items-center rounded-full bg-[#25d366] px-1.5 text-[10px] font-bold text-white">
+                        <span className="grid h-5 min-w-[20px] shrink-0 place-items-center rounded-full bg-[#0a7c68] px-1.5 text-[10px] font-bold text-white">
                           {conversation.unread > 99 ? "99+" : conversation.unread}
                         </span>
                       )}

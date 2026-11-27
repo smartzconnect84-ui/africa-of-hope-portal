@@ -128,7 +128,7 @@ export function DirectMessageDialog({
   peer: User | null;
   onClose: () => void;
 }) {
-  const { messages, peerTyping, send, sendTyping, markSeen } = useDirectMessages(meId, peer?.id ?? null);
+  const { messages, peerTyping, send, sendTyping, markSeen } = useDirectMessages(meId ?? undefined, peer?.id ?? undefined);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);

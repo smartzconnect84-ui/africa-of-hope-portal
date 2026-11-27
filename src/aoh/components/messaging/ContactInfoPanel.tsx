@@ -346,6 +346,7 @@ export default function ContactInfoPanel({
                 <a
                   key={message.id}
                   href={`#msg-${message.id}`}
+                  onClick={onClose}
                   className="flex aspect-square flex-col items-center justify-center gap-1 rounded-md bg-slate-100 p-1 text-center text-[9.5px] text-slate-600"
                   title={message.attachment?.name}
                 >
@@ -373,6 +374,7 @@ export default function ContactInfoPanel({
               <li key={message.id}>
                 <a
                   href={`#msg-${message.id}`}
+                  onClick={onClose}
                   className={cn(
                     "block truncate rounded-lg border border-amber-200/70 bg-amber-50/70 px-2.5 py-1.5 text-[11.5px] text-slate-700",
                   )}

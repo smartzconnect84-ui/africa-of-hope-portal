@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  Clock,
   FileText,
   Image as ImageIcon,
   Mic,
@@ -52,9 +53,11 @@ export default function Composer({
   threadKey: string;
   initialDraft: string;
   onDraftChange: (value: string) => void;
-  onSend: (payload: ComposerSend) => void;
+  /** Resolves false when the message was not sent, so the text is kept. */
+  onSend: (payload: ComposerSend) => Promise<boolean> | boolean | void;
   onTyping: () => void;
-  onAttach: (file: File, caption: string, seconds?: number) => void;
+  /** Resolves true once the attachment message was sent. */
+  onAttach: (file: File, caption: string, seconds?: number) => Promise<boolean> | boolean;
   replyTo: Message | null;
   editing: Message | null;
   onCancelReply: () => void;
@@ -69,6 +72,7 @@ export default function Composer({
   const [attachOpen, setAttachOpen] = useState(false);
   const [pending, setPending] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [attachBusy, setAttachBusy] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const imageInput = useRef<HTMLInputElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -117,22 +121,33 @@ export default function Composer({
     setPreviewUrl(null);
   }
 
-  function submit() {
-    if (disabled) return;
+  async function submit() {
+    // `sending`/`uploading`/`attachBusy` are asynchronous, so they must be
+    // checked here as well or a quick double Enter sends twice.
+    if (disabled || sending || uploading || attachBusy) return;
     const body = value.trim();
     if (pending) {
-      onAttach(pending, body);
-      clearPending();
-      setValue("");
-      onDraftChange("");
+      setAttachBusy(true);
+      try {
+        const ok = await onAttach(pending, body);
+        // Keep the file and caption on screen when the upload or send fails so
+        // nothing the member typed is lost.
+        if (ok) {
+          clearPending();
+          setValue("");
+          onDraftChange("");
+        }
+      } finally {
+        setAttachBusy(false);
+      }
       return;
     }
     if (!body) return;
-    onSend({ body });
-    if (!editing) {
-      setValue("");
-      onDraftChange("");
-    }
+    // Wait for the result: a failed send must leave the text in the box.
+    const sent = await onSend({ body });
+    if (sent === false) return;
+    setValue("");
+    onDraftChange("");
     setEmojiOpen(false);
   }
 
@@ -230,23 +245,31 @@ export default function Composer({
       )}
 
       {emojiOpen && (
-        <div className="absolute bottom-[110%] left-2 z-30 grid max-h-56 w-[min(92vw,320px)] grid-cols-8 gap-0.5 overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 shadow-2xl">
-          {EMOJI.map((emoji) => (
-            <button
-              key={emoji}
-              type="button"
-              onClick={() => {
-                const next = value + emoji;
-                setValue(next);
-                onDraftChange(next);
-                inputRef.current?.focus();
-              }}
-              className="grid h-8 w-8 place-items-center rounded text-[17px] hover:bg-slate-100"
-            >
-              {emoji}
-            </button>
-          ))}
-        </div>
+        <>
+          <button
+            type="button"
+            aria-label="Close emoji picker"
+            className="fixed inset-0 z-20 cursor-default"
+            onClick={() => setEmojiOpen(false)}
+          />
+          <div className="absolute bottom-[110%] left-2 z-30 grid max-h-56 w-[min(92vw,320px)] grid-cols-8 gap-0.5 overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 shadow-2xl">
+            {EMOJI.map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                onClick={() => {
+                  const next = value + emoji;
+                  setValue(next);
+                  onDraftChange(next);
+                  inputRef.current?.focus();
+                }}
+                className="grid h-8 w-8 place-items-center rounded text-[17px] hover:bg-slate-100"
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        </>
       )}
 
       {attachOpen && (
@@ -319,26 +342,28 @@ export default function Composer({
             onTyping();
           }}
           onKeyDown={(event) => {
-            if (event.key === "Enter" && !event.shiftKey) {
+            // isComposing protects IME input (e.g. typing in another script).
+            if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
               event.preventDefault();
-              submit();
+              void submit();
             }
           }}
           rows={1}
+          disabled={disabled || uploading}
           placeholder={editing ? "Edit the message…" : "Type a message"}
           aria-label="Message"
-          className="max-h-32 min-h-[40px] flex-1 resize-none rounded-xl border border-transparent bg-white px-3 py-2.5 text-[13.5px] text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#25d366]/50 focus:ring-2 focus:ring-[#25d366]/20"
+          className="max-h-32 min-h-[40px] flex-1 resize-none rounded-xl border border-transparent bg-white px-3 py-2.5 text-[13.5px] text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#25d366]/50 focus:ring-2 focus:ring-[#25d366]/20 disabled:opacity-70"
         />
 
         {value.trim() || pending ? (
           <button
             type="button"
-            onClick={submit}
-            disabled={sending || uploading || disabled}
+            onClick={() => void submit()}
+            disabled={sending || uploading || attachBusy || disabled}
             aria-label={editing ? "Save edit" : "Send message"}
             className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#075e54] text-white shadow-sm transition hover:bg-[#054d45] disabled:opacity-50"
           >
-            <Send className="h-4.5 w-4.5" />
+            {attachBusy ? <Clock className="h-4 w-4 animate-spin" /> : <Send className="h-4.5 w-4.5" />}
           </button>
         ) : (
           <button

@@ -119,6 +119,11 @@ export const chatErrorText = (err: unknown, fallback: string) => {
   if (/relation .* does not exist|schema cache|column .* does not exist/i.test(message)) {
     return "Messaging storage is still being set up. Your messages are saved on this device meanwhile.";
   }
+  if (/maximum allowed size|payload too large|object exceeded|file is too large/i.test(message)) {
+    return "That file is too large to send. Keep attachments under 25 MB.";
+  }
+  // Never surface raw PostgREST payloads to members.
+  if (/PGRST\d+/.test(message) || /^\s*[\{\[]/.test(message)) return fallback;
   return message || fallback;
 };
 
@@ -339,12 +344,15 @@ export async function fetchThread(meId: string, target: ThreadRef): Promise<Mess
       .or(
         `and(sender_id.eq.${meId},receiver_id.eq.${target.peerId}),and(sender_id.eq.${target.peerId},receiver_id.eq.${meId})`,
       )
-      .order("created_at", { ascending: true })
+      // Newest first so the window keeps the latest messages of a long thread,
+      // then reversed for display order.
+      .order("created_at", { ascending: false })
       .limit(MESSAGE_LIMIT);
     if (error) throw error;
     const rows = ((data ?? []) as unknown as Row[]).map((row) =>
       normalizeMessage({ ...row, receiver_id: row.sender_id === meId ? target.peerId : meId }),
     );
+    rows.reverse();
     if (caps.reactions) {
       const reactions = await fetchReactions("dm", rows.map((m) => m.id));
       rows.forEach((m) => {
@@ -359,10 +367,11 @@ export async function fetchThread(meId: string, target: ThreadRef): Promise<Mess
     .from("group_messages")
     .select(messageColumns(caps, true))
     .eq("group_id", target.groupId)
-    .order("created_at", { ascending: true })
+    .order("created_at", { ascending: false })
     .limit(MESSAGE_LIMIT);
   if (error) throw error;
   const rows = ((data ?? []) as unknown as Row[]).map((row) => normalizeMessage({ ...row, group_id: target.groupId }));
+  rows.reverse();
   if (caps.reactions) {
     const reactions = await fetchReactions("group", rows.map((m) => m.id));
     rows.forEach((m) => {
@@ -459,7 +468,7 @@ async function insertMessage(
   const columns = ["id", "created_at", ...(target.kind === "dm" ? ["seen_at"] : [])].join(",");
   const { data, error } = await supabase.from(table).insert(record).select(columns).single();
   if (error) throw error;
-  const row = (data ?? {}) as Row;
+  const row = (data ?? {}) as unknown as Row;
   return { id: str(row.id), created_at: str(row.created_at), seen_at: row.seen_at ? str(row.seen_at) : null };
 }
 
@@ -550,6 +559,9 @@ export function useMessageThread(meId: string | undefined, target: ThreadRef | n
   const targetRef = useRef(target);
   targetRef.current = target;
   const rowsRef = useRef<Message[]>([]);
+  // State updates are asynchronous, so a fast double Enter could pass the
+  // `sending` check twice. The ref closes that window.
+  const sendingRef = useRef(false);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const typingTimer = useRef<number | undefined>(undefined);
   const key = meId && target ? threadCacheKey(meId, target) : "";
@@ -739,9 +751,10 @@ export function useMessageThread(meId: string | undefined, target: ThreadRef | n
   const send = useCallback(
     async (payload: OutgoingMessage): Promise<boolean> => {
       const current = targetRef.current;
-      if (!meId || !current || sending) return false;
+      if (!meId || !current || sendingRef.current) return false;
       const body = (payload.body ?? "").trim();
       if (!body && !payload.attachment) return false;
+      sendingRef.current = true;
       setSending(true);
       setError(null);
       const cache = threadCacheKey(meId, current);
@@ -751,11 +764,6 @@ export function useMessageThread(meId: string | undefined, target: ThreadRef | n
       setMessages(merged);
       writeLocalThread(cache, merged);
       try {
-        void channelRef.current?.send({ type: "broadcast", event: "message", payload: optimistic });
-      } catch {
-        /* durable insert below still delivers */
-      }
-      try {
         const caps = await messagingCapabilities();
         const saved = await insertMessage(meId, current, { ...payload, body }, caps);
         if (!saved) {
@@ -764,6 +772,16 @@ export function useMessageThread(meId: string | undefined, target: ThreadRef | n
           rowsRef.current = stale;
           setMessages(stale);
           writeLocalThread(cache, stale);
+          // Local-only delivery when the server has nowhere to store the row.
+          try {
+            void channelRef.current?.send({
+              type: "broadcast",
+              event: "message",
+              payload: { ...optimistic, pending: true },
+            });
+          } catch {
+            /* offline */
+          }
           return false;
         }
         const confirmed: Message = {
@@ -780,6 +798,13 @@ export function useMessageThread(meId: string | undefined, target: ThreadRef | n
         rowsRef.current = replaced;
         setMessages(replaced);
         writeLocalThread(cache, replaced);
+        // Announce the stored row once, with its real id: broadcasting the
+        // optimistic copy as well delivered each message twice to the peer.
+        try {
+          void channelRef.current?.send({ type: "broadcast", event: "message", payload: confirmed });
+        } catch {
+          /* the postgres listener still delivers the row */
+        }
         // Tell the other window which local id became the stored row.
         try {
           void channelRef.current?.send({
@@ -808,10 +833,30 @@ export function useMessageThread(meId: string | undefined, target: ThreadRef | n
         setError(chatErrorText(err, "The message was kept on this device and will sync when you are back online."));
         return false;
       } finally {
+        sendingRef.current = false;
         setSending(false);
       }
     },
-    [meId, sending],
+    [meId],
+  );
+
+  /** Re-send a message that is still marked pending after a failure. */
+  const retry = useCallback(
+    async (message: Message): Promise<boolean> => {
+      const current = targetRef.current;
+      if (!current || !meId || !message.pending) return false;
+      const cache = threadCacheKey(meId, current);
+      const next = rowsRef.current.filter((m) => m.id !== message.id);
+      rowsRef.current = next;
+      setMessages(next);
+      writeLocalThread(cache, next);
+      return send({
+        body: message.body,
+        attachment: message.attachment,
+        replyTo: message.reply_to,
+      });
+    },
+    [meId, send],
   );
 
   const patchMessage = useCallback(
@@ -863,7 +908,7 @@ export function useMessageThread(meId: string | undefined, target: ThreadRef | n
       if (!caps.rich || !isUuidId(meId)) return;
       const table = current.kind === "dm" ? "direct_messages" : "group_messages";
       const { error: deleteError } = await supabase.from(table).update({ body: "", deleted_at }).eq("id", id);
-      if (deleteError) setError(chatErrorText(deleteError, "The delete is saved on this device only."));
+      if (deleteError) setError(chatErrorText(deleteError, "The message was removed on this device only."));
     },
     [meId, patchMessage],
   );
@@ -878,7 +923,8 @@ export function useMessageThread(meId: string | undefined, target: ThreadRef | n
       const caps = await messagingCapabilities();
       if (!caps.rich || !isUuidId(meId)) return;
       const table = current.kind === "dm" ? "direct_messages" : "group_messages";
-      await supabase.from(table).update({ starred }).eq("id", id);
+      const { error: starError } = await supabase.from(table).update({ starred }).eq("id", id);
+      if (starError) setError(chatErrorText(starError, "The star is saved on this device only."));
     },
     [meId, patchMessage],
   );
@@ -893,7 +939,11 @@ export function useMessageThread(meId: string | undefined, target: ThreadRef | n
       const caps = await messagingCapabilities();
       if (!caps.rich || !isUuidId(meId)) return;
       const table = current.kind === "dm" ? "direct_messages" : "group_messages";
-      await supabase.from(table).update({ pinned_at: pinned ? new Date().toISOString() : null }).eq("id", id);
+      const { error: pinError } = await supabase
+        .from(table)
+        .update({ pinned_at: pinned ? new Date().toISOString() : null })
+        .eq("id", id);
+      if (pinError) setError(chatErrorText(pinError, "The pin is saved on this device only."));
     },
     [meId, patchMessage],
   );
@@ -986,6 +1036,7 @@ export function useMessageThread(meId: string | undefined, target: ThreadRef | n
     sending,
     peerTyping,
     send,
+    retry,
     edit,
     remove,
     react,
