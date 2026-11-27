@@ -7,12 +7,18 @@ import { DEFAULT_TEAM } from "./teamContent";
 import { DEFAULT_ABOUT, DEFAULT_PRESENTATION, DEFAULT_PWA, DEFAULT_LAYOUT, DEFAULT_CAMPUS_LIFE } from './publicPresentation';
 import { DEFAULT_PUBLIC_PAGES } from '../lib/publicPages';
 
-// Reused across the About and Impact homepage sections and the CTA band so the
-// defaults look like today's live site until an admin uploads replacements.
+// Reused by the homepage CTA band so the defaults look like today's live site
+// until an admin uploads replacements.
 const WORKBENCH_IMG =
   "https://dala-prod-public-storage.s3.eu-west-1.amazonaws.com/generated-images/da27f14e-5252-4f4b-a327-6425a57f1e62/instructor-workbench-94a65568-1791250704601.webp";
 const GRADUATE_IMG =
   "https://dala-prod-public-storage.s3.eu-west-1.amazonaws.com/generated-images/da27f14e-5252-4f4b-a327-6425a57f1e62/graduate-portrait-692a8c54-1791250703262.webp";
+// Real cohort photographs already used by the hero slides. They replace the
+// /images/*.jpg placeholders that were never added to public/.
+const GRADUATES_IMG =
+  "https://dala-prod-public-storage.s3.eu-west-1.amazonaws.com/attachments/7df501ed-0d87-47d4-9851-c8a5505b89b3/1791902655944_IMG-20251006-WA0070.webp";
+const COHORT_IMG =
+  "https://dala-prod-public-storage.s3.eu-west-1.amazonaws.com/attachments/7df501ed-0d87-47d4-9851-c8a5505b89b3/1791902768004_IMG-20250919-WA0127.webp";
 
 /**
  * Offline defaults only. Every record now lives in Supabase and is hydrated by
@@ -215,7 +221,7 @@ eyebrow: "Our work",
     subtitle: "A practical learning platform for ambitious people across Liberia and beyond.",
     body:
       "Africa of Hope connects learners to relevant programmes, supportive mentors and clear proceedings from application to certification. Explore what is happening, choose your next step and build momentum with a community that believes in progress.",
-        image: "/images/our-work-graduates.jpg",
+        image: GRADUATES_IMG,
       },
       features: {
         eyebrow: "Why choose us",
@@ -227,7 +233,7 @@ eyebrow: "Our work",
         eyebrow: "Student success",
         title: "Student success stories from Liberia",
         subtitle: "Real graduates from Monrovia, Margibi and beyond, building careers at home.",
-        image: "/images/student-success-certificate.jpg",
+        image: COHORT_IMG,
       },
       admissions: {
         eyebrow: "How admission works",
