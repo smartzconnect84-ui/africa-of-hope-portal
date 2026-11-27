@@ -170,6 +170,15 @@ export default function HeroSlider({ onOpenApply, onEnterPortal }: HeroSliderPro
   const portalLabel = copy["hero.portal"] || "School Portal Login";
 
   const idx = current % safeSlides.length;
+  // Shared entrance for every CTA; the parent staggers these.
+  const ctaItem = {
+    hidden: prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 14 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: prefersReducedMotion ? 0.18 : 0.45, ease: "easeOut" as const },
+    },
+  };
   const facts = [
     { icon: GraduationCap, value: "31", label: "programmes" },
     { icon: BadgeCheck, value: "100%", label: "Verifiable" },
@@ -272,38 +281,90 @@ export default function HeroSlider({ onOpenApply, onEnterPortal }: HeroSliderPro
               </AnimatePresence>
             </div>
 
-            <div className="mt-8 flex flex-row flex-nowrap items-center gap-1.5 sm:gap-3">
-              <button
-                type="button"
-                onClick={onOpenApply}
-                className="group inline-flex h-10 min-w-0 shrink items-center justify-center gap-1 whitespace-nowrap rounded-full bg-amber-400 px-3 text-xs font-extrabold sm:h-12 sm:gap-2 sm:px-7 sm:text-base text-emerald-950 shadow-[0_18px_40px_-12px_rgba(251,191,36,0.7)] transition hover:bg-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-950 active:scale-[0.98]"
-              >
-                Apply!
-                <ArrowRight className="hidden h-5 w-5 transition sm:block-transform duration-300 group-hover:translate-x-1" aria-hidden="true" />
-              </button>
-              <a
+            {/* One CTA cluster, three deliberate weights:
+                Apply (solid gold) → Explore (glass) → Donate / Verify (outline).
+                The cluster staggers in once; each button then answers hover, focus
+                and press. All motion is skipped when the OS asks for less. */}
+            <motion.div
+              initial="hidden"
+              animate="show"
+              variants={{
+                hidden: {},
+                show: {
+                  transition: {
+                    staggerChildren: prefersReducedMotion ? 0 : 0.08,
+                    delayChildren: prefersReducedMotion ? 0 : 0.12,
+                  },
+                },
+              }}
+              className="mt-8 flex flex-wrap items-center gap-2.5 sm:gap-3"
+            >
+              <motion.div variants={ctaItem} className="relative">
+                {!prefersReducedMotion && (
+                  <motion.span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -inset-1 rounded-full bg-amber-400/25 blur-md"
+                    animate={{ opacity: [0.15, 0.5, 0.15], scale: [1, 1.04, 1] }}
+                    transition={{ duration: 3.4, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                )}
+                <motion.button
+                  type="button"
+                  onClick={onOpenApply}
+                  whileHover={prefersReducedMotion ? undefined : { y: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="btn-sheen group relative inline-flex h-11 items-center justify-center gap-2 rounded-full bg-amber-400 px-5 text-sm font-extrabold text-emerald-950 ring-1 ring-amber-300/60 shadow-[0_18px_40px_-14px_rgba(251,191,36,0.85)] transition-colors hover:bg-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-950 sm:h-12 sm:px-7 sm:text-base"
+                >
+                  Apply!
+                  <ArrowRight
+                    className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1 sm:h-5 sm:w-5"
+                    aria-hidden="true"
+                  />
+                </motion.button>
+              </motion.div>
+
+              <motion.a
+                variants={ctaItem}
                 href="#programmes"
-                className="inline-flex h-10 min-w-0 shrink items-center justify-center gap-1 whitespace-nowrap rounded-full border border-white/30 bg-white/10 px-3 text-xs font-bold text-white backdrop-blur transition hover:bg-white/20 active:scale-[0.98] sm:h-12 sm:gap-2 sm:px-7 sm:text-base"
+                whileHover={prefersReducedMotion ? undefined : { y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                className="group inline-flex h-11 items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 px-5 text-sm font-bold text-white backdrop-blur transition-colors hover:border-white/50 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-950 sm:h-12 sm:px-6 sm:text-base"
               >
                 Explore
-                <ArrowUpRight className="hidden h-5 w-5 sm:block" aria-hidden="true" />
-              </a>
-              <a
-                href="/donate"
-                className="inline-flex h-10 min-w-0 shrink items-center justify-center gap-1 whitespace-nowrap rounded-full px-2 text-xs font-bold text-amber-300 underline-offset-4 transition hover:text-amber-200 hover:underline sm:h-12 sm:gap-2 sm:px-4 sm:text-base"
-              >
-                <HeartHandshake className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
-                {donateLabel}
-              </a>
-            </div>
+                <ArrowUpRight
+                  className="h-4 w-4 text-amber-300 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 sm:h-5 sm:w-5"
+                  aria-hidden="true"
+                />
+              </motion.a>
 
-            <a
-              href="/verify"
-              className="mt-3 inline-flex min-h-[44px] items-center gap-1.5 text-sm font-semibold text-emerald-100 underline-offset-4 transition hover:text-white hover:underline"
-            >
-              <ShieldCheck className="h-4 w-4 text-amber-300" aria-hidden="true" />
-              {verifyLabel}
-            </a>
+              <motion.a
+                variants={ctaItem}
+                href="/donate"
+                whileHover={prefersReducedMotion ? undefined : { y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                className="group inline-flex h-11 items-center justify-center gap-2 rounded-full border border-amber-300/40 px-4 text-sm font-bold text-amber-200 transition-colors hover:border-amber-300/70 hover:bg-amber-300/10 hover:text-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-950 sm:h-12 sm:px-5"
+              >
+                <HeartHandshake
+                  className="h-4 w-4 transition-transform duration-300 group-hover:scale-110 sm:h-5 sm:w-5"
+                  aria-hidden="true"
+                />
+                {donateLabel}
+              </motion.a>
+
+              <motion.a
+                variants={ctaItem}
+                href="/verify"
+                whileHover={prefersReducedMotion ? undefined : { y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                className="group inline-flex h-11 items-center justify-center gap-2 rounded-full border border-dashed border-emerald-200/40 px-4 text-[13px] font-semibold text-emerald-100 transition-colors hover:border-emerald-200/70 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200/70 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-950 sm:h-12 sm:px-5 sm:text-sm"
+              >
+                <ShieldCheck
+                  className="h-4 w-4 text-amber-300 transition-transform duration-300 group-hover:rotate-6"
+                  aria-hidden="true"
+                />
+                {verifyLabel}
+              </motion.a>
+            </motion.div>
           </div>
 
           {/* Slide card */}
