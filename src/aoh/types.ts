@@ -68,6 +68,8 @@ export interface Program {
   courseNumber?: string;
   title: string;
   category: string;
+  /** Broad skill area: Professional Skills, Technical Skills or Vocational Skills. */
+  skillCategory?: string;
   durationWeeks: number;
   /** How the programme is delivered: fully online, partially online, or on-site. */
   deliveryModes?: DeliveryMode[];

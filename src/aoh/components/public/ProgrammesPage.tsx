@@ -35,6 +35,7 @@ export default function ProgrammesPage({
   const { state } = useApp();
   const [query, setQuery] = useState("");
   const [track, setTrack] = useState("All");
+  const [skill, setSkill] = useState("All");
   const [mode, setMode] = useState<"All" | DeliveryMode>("All");
   const [plannerOpen, setPlannerOpen] = useState(false);
   const [planProgram, setPlanProgram] = useState<Program | null>(null);
@@ -45,11 +46,18 @@ export default function ProgrammesPage({
     return ["All", ...Array.from(set).sort()];
   }, [programs]);
 
+  const skillCategories = useMemo(() => {
+    const set = new Set<string>();
+    programs.forEach((p) => set.add((p.skillCategory || "Professional Skills").trim() || "Professional Skills"));
+    return ["All", ...Array.from(set).sort()];
+  }, [programs]);
+
   const availableModes = useMemo(() => modesPresent(programs), [programs]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return programs.filter((p) => {
+      if (skill !== "All" && (p.skillCategory || "Professional Skills") !== skill) return false;
       if (track !== "All" && (p.category || "General") !== track) return false;
       if (mode !== "All" && !programModes(p).includes(mode)) return false;
       if (!q) return true;
@@ -60,7 +68,7 @@ export default function ProgrammesPage({
         (p.category || "").toLowerCase().includes(q)
       );
     });
-  }, [programs, query, track, mode]);
+  }, [programs, query, skill, track, mode]);
 
   // Group the visible courses by training track so duration + cost read clearly.
   const groups = useMemo(() => {
@@ -102,7 +110,14 @@ export default function ProgrammesPage({
             {programs.length} courses in two-week, one-month, three-month and six-month tracks. Fully online is 1 hour a day, 3 days a week;
             fully on-site is 2 hours daily, 2 days a week. Tuition-free: you only pay the registration package.
           </motion.p>
-          <div className="mt-6 flex flex-wrap gap-2 text-[11px] font-semibold">
+          <div className="mt-4 flex flex-wrap gap-2 text-[11px] font-semibold">
+            {skillCategories.filter((c) => c !== "All").map((c) => (
+              <button key={c} type="button" onClick={() => setSkill(skill === c ? "All" : c)} className={`rounded-full px-3 py-1.5 ring-1 transition ${skill === c ? "bg-amber-400 text-black ring-amber-300" : "bg-white/10 text-white ring-white/20 hover:bg-white/20"}`}>
+                {c}
+              </button>
+            ))}
+          </div>
+          <div className="mt-2 flex flex-wrap gap-2 text-[11px] font-semibold">
             {tracks.filter((c) => c !== "All").map((c) => (
               <button key={c} type="button" onClick={() => setTrack(c)} className={`rounded-full px-3 py-1.5 ring-1 transition ${track === c ? "bg-amber-400 text-black ring-amber-300" : "bg-white/10 text-white ring-white/20 hover:bg-white/20"}`}>
                 {c} · {programs.filter((p) => (p.category || "General") === c).length}

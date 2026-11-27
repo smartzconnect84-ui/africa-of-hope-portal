@@ -496,9 +496,9 @@ export default function PublicMarketingSite({ onEnterPortal }: { onEnterPortal: 
               role="dialog"
               aria-modal="true"
               aria-label="Site menu"
-              initial={{ x: "100%", opacity: 0.6 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: "100%", opacity: 0 }}
+              initial={{ y: "100%", opacity: 0.6 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: "100%", opacity: 0 }}
               transition={{ duration: 0.32, ease: [0.32, 0.72, 0, 1] }}
               className="aoh-drawer absolute bottom-[max(0.75rem,env(safe-area-inset-bottom))] right-3 top-[max(0.75rem,env(safe-area-inset-top))] flex w-[min(20rem,88vw)] flex-col gap-2 overflow-hidden rounded-[16px] border border-white/10 border-l-[3px] border-l-[#D4AF37] bg-black p-[24px]! text-white shadow-2xl"
             >

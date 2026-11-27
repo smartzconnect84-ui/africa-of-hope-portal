@@ -462,6 +462,7 @@ export async function fetchState(previous: AppState): Promise<FetchResult> {
     selfPacedEnabled: flag(p, "self_paced_enabled", false),
     selfPacedRequiresApproval: flag(p, "self_paced_requires_approval", false),
     category: txt(p.category),
+    skillCategory: txt(p.skill_category) || undefined,
     durationWeeks: num(p, "duration_weeks"),
     tuition: num(p, "tuition"),
     certification: txt(p.certification),

@@ -102,6 +102,12 @@ export default function HeroSlider({ onOpenApply, onEnterPortal }: HeroSliderPro
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const [progress, setProgress] = useState(0);
+  // Randomly switch the order of the hero CTAs on every slide change.
+  const [ctaOrder, setCtaOrder] = useState<number[]>([0, 1, 2, 3]);
+  useEffect(() => {
+    const order = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
+    setCtaOrder(order);
+  }, [current]);
   const prefersReducedMotion = useReducedMotion();
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const touchX = useRef<number | null>(null);
@@ -164,7 +170,6 @@ export default function HeroSlider({ onOpenApply, onEnterPortal }: HeroSliderPro
 
   const slide = safeSlides[current % safeSlides.length];
   const copy = state.websiteSettings.publicCopy;
-  const badgeText = (copy["hero.badge"] || "").trim();
   const donateLabel = copy["hero.donate"] || "Donate";
   const verifyLabel = copy["hero.verify"] || "Verify Certificate";
   const portalLabel = copy["hero.portal"] || "School Portal Login";
@@ -179,6 +184,11 @@ export default function HeroSlider({ onOpenApply, onEnterPortal }: HeroSliderPro
       transition: { duration: prefersReducedMotion ? 0.18 : 0.45, ease: "easeOut" as const },
     },
   };
+  const ctaSpring = { type: "spring" as const, stiffness: 420, damping: 26, mass: 0.6 };
+  const ctaHover = prefersReducedMotion ? undefined : { y: -3, scale: 1.02 };
+  const ctaTap = prefersReducedMotion ? undefined : { scale: 0.96 };
+  const controlHover = prefersReducedMotion ? undefined : { scale: 1.12 };
+  const controlTap = prefersReducedMotion ? undefined : { scale: 0.9 };
   const facts = [
     { icon: GraduationCap, value: "31", label: "programmes" },
     { icon: BadgeCheck, value: "100%", label: "Verifiable" },
@@ -252,9 +262,6 @@ export default function HeroSlider({ onOpenApply, onEnterPortal }: HeroSliderPro
                 </span>
                 Admissions 2026 / 27
               </span>
-              <span className="min-w-0 max-w-full truncate rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-50 backdrop-blur">
-                {badgeText || slide.eyebrow}
-              </span>
             </div>
 
             <div aria-live="polite" className="mt-6">
@@ -311,8 +318,10 @@ export default function HeroSlider({ onOpenApply, onEnterPortal }: HeroSliderPro
                 <motion.button
                   type="button"
                   onClick={onOpenApply}
-                  whileHover={prefersReducedMotion ? undefined : { y: -2 }}
-                  whileTap={{ scale: 0.97 }}
+                  style={{ order: ctaOrder.indexOf(0) }}
+                  whileHover={ctaHover}
+                  whileTap={ctaTap}
+                  transition={ctaSpring}
                   className="btn-sheen group relative inline-flex h-11 items-center justify-center gap-2 rounded-full bg-amber-400 px-5 text-sm font-extrabold text-emerald-950 ring-1 ring-amber-300/60 shadow-[0_18px_40px_-14px_rgba(251,191,36,0.85)] transition-colors hover:bg-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-950 sm:h-12 sm:px-7 sm:text-base"
                 >
                   Apply!
@@ -326,9 +335,10 @@ export default function HeroSlider({ onOpenApply, onEnterPortal }: HeroSliderPro
               <motion.a
                 variants={ctaItem}
                 href="#programmes"
+                style={{ order: ctaOrder.indexOf(1) }}
                 whileHover={prefersReducedMotion ? undefined : { y: -2 }}
                 whileTap={{ scale: 0.97 }}
-                className="group inline-flex h-11 items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 px-5 text-sm font-bold text-white backdrop-blur transition-colors hover:border-white/50 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-950 sm:h-12 sm:px-6 sm:text-base"
+                className="btn-sheen group inline-flex h-11 items-center justify-center gap-2 rounded-full border border-white/30 bg-white/10 px-5 text-sm font-bold text-white backdrop-blur transition-colors hover:border-white/50 hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-950 sm:h-12 sm:px-6 sm:text-base"
               >
                 Explore
                 <ArrowUpRight
@@ -340,9 +350,10 @@ export default function HeroSlider({ onOpenApply, onEnterPortal }: HeroSliderPro
               <motion.a
                 variants={ctaItem}
                 href="/donate"
+                style={{ order: ctaOrder.indexOf(2) }}
                 whileHover={prefersReducedMotion ? undefined : { y: -2 }}
                 whileTap={{ scale: 0.97 }}
-                className="group inline-flex h-11 items-center justify-center gap-2 rounded-full border border-amber-300/40 px-4 text-sm font-bold text-amber-200 transition-colors hover:border-amber-300/70 hover:bg-amber-300/10 hover:text-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-950 sm:h-12 sm:px-5"
+                className="btn-sheen group inline-flex h-11 items-center justify-center gap-2 rounded-full border border-amber-300/40 px-4 text-sm font-bold text-amber-200 transition-colors hover:border-amber-300/70 hover:bg-amber-300/10 hover:text-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-950 sm:h-12 sm:px-5"
               >
                 <HeartHandshake
                   className="h-4 w-4 transition-transform duration-300 group-hover:scale-110 sm:h-5 sm:w-5"
@@ -354,9 +365,10 @@ export default function HeroSlider({ onOpenApply, onEnterPortal }: HeroSliderPro
               <motion.a
                 variants={ctaItem}
                 href="/verify"
+                style={{ order: ctaOrder.indexOf(3) }}
                 whileHover={prefersReducedMotion ? undefined : { y: -2 }}
                 whileTap={{ scale: 0.97 }}
-                className="group inline-flex h-11 items-center justify-center gap-2 rounded-full border border-dashed border-emerald-200/40 px-4 text-[13px] font-semibold text-emerald-100 transition-colors hover:border-emerald-200/70 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200/70 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-950 sm:h-12 sm:px-5 sm:text-sm"
+                className="btn-sheen group inline-flex h-11 items-center justify-center gap-2 rounded-full border border-dashed border-emerald-200/40 px-4 text-[13px] font-semibold text-emerald-100 transition-colors hover:border-emerald-200/70 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200/70 focus-visible:ring-offset-2 focus-visible:ring-offset-emerald-950 sm:h-12 sm:px-5 sm:text-sm"
               >
                 <ShieldCheck
                   className="h-4 w-4 text-amber-300 transition-transform duration-300 group-hover:rotate-6"
@@ -394,31 +406,61 @@ export default function HeroSlider({ onOpenApply, onEnterPortal }: HeroSliderPro
                     {slide.eyebrow}
                   </p>
                   <span className="flex shrink-0 items-center gap-1.5">
-                    <button
+                    <motion.button
                       type="button"
                       onClick={prev}
                       aria-label="Previous highlight"
-                      className="grid h-9 w-9 place-items-center rounded-full bg-white/15 text-white ring-1 ring-white/30 backdrop-blur transition hover:bg-white/30 active:scale-95"
+                      whileHover={controlHover}
+                      whileTap={controlTap}
+                      transition={ctaSpring}
+                      className="group grid h-9 w-9 place-items-center rounded-full bg-white/15 text-white ring-1 ring-white/30 backdrop-blur transition-colors hover:bg-white/30 hover:ring-white/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
                     >
-                      <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-                    </button>
-                    <button
+                      <ChevronLeft
+                        className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-0.5"
+                        aria-hidden="true"
+                      />
+                    </motion.button>
+                    <motion.button
                       type="button"
                       onClick={next}
                       aria-label="Next highlight"
-                      className="grid h-9 w-9 place-items-center rounded-full bg-amber-400 text-emerald-950 transition hover:bg-amber-300 active:scale-95"
+                      whileHover={controlHover}
+                      whileTap={controlTap}
+                      transition={ctaSpring}
+                      className="group grid h-9 w-9 place-items-center rounded-full bg-amber-400 text-emerald-950 ring-1 ring-transparent transition-colors hover:bg-amber-300 hover:ring-amber-200/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200"
                     >
-                      <ChevronRight className="h-4 w-4" aria-hidden="true" />
-                    </button>
-                    <button
+                      <ChevronRight
+                        className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5"
+                        aria-hidden="true"
+                      />
+                    </motion.button>
+                    <motion.button
                       type="button"
                       onClick={() => setPaused((p) => !p)}
                       aria-label={paused ? "Resume slideshow" : "Pause slideshow"}
                       aria-pressed={paused}
-                      className="grid h-9 w-9 place-items-center rounded-full bg-white/15 text-white ring-1 ring-white/30 backdrop-blur transition hover:bg-white/30 active:scale-95"
+                      whileHover={controlHover}
+                      whileTap={controlTap}
+                      transition={ctaSpring}
+                      className="grid h-9 w-9 place-items-center rounded-full bg-white/15 text-white ring-1 ring-white/30 backdrop-blur transition-colors hover:bg-white/30 hover:ring-white/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
                     >
-                      {paused ? <Play className="h-4 w-4" aria-hidden="true" /> : <Pause className="h-4 w-4" aria-hidden="true" />}
-                    </button>
+                      <AnimatePresence mode="wait" initial={false}>
+                        <motion.span
+                          key={paused ? "play" : "pause"}
+                          initial={{ opacity: 0, scale: 0.6, rotate: -90 }}
+                          animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                          exit={{ opacity: 0, scale: 0.6, rotate: 90 }}
+                          transition={{ duration: 0.16, ease: "easeOut" }}
+                          className="grid place-items-center"
+                        >
+                          {paused ? (
+                            <Play className="h-4 w-4" aria-hidden="true" />
+                          ) : (
+                            <Pause className="h-4 w-4" aria-hidden="true" />
+                          )}
+                        </motion.span>
+                      </AnimatePresence>
+                    </motion.button>
                   </span>
                 </div>
               </div>

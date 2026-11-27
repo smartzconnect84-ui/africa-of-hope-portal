@@ -4,7 +4,6 @@ export const DEFAULT_PUBLIC_COPY: Record<string, string> = {
   "hero.donate": "Donate",
   "hero.portal": "School Portal Login",
   "hero.verify": "Verify Certificate",
-  "hero.badge": "Cohort Celebrations",
   "about.story": "Read our full story",
   "summary.link": "Explore our mission and story",
   "team.link": "Meet the team",
