@@ -117,7 +117,7 @@ export async function registerDeployOrigin(options = {}) {
   const env = options.env ?? process.env;
   const log = options.log ?? ((message) => console.warn(message));
   const { origin, source } = readDeployOrigin(env);
-  const token = String(env.SUPABASE_ACCESS_TOKEN ?? "").trim();
+  const token = String(env.SUPABASE_ACCESS_TOKEN ?? env.SUPABASE_TOKEN ?? "").trim();
   const projectRef = projectRefFrom(options.projectUrl ?? env.SUPABASE_URL ?? "", env.SUPABASE_PROJECT_REF);
   const dryRun = Boolean(options.dryRun);
 

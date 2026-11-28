@@ -20,6 +20,26 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { Client } from "pg";
 
+// `.env` is gitignored, so the connection string can live in the workspace
+// instead of a dashboard. Shell/dashboard values still win; this is only a
+// fallback for credentials the deploy environment does not provide.
+function hasDatabaseEnv() {
+  return Boolean(
+    process.env.SUPABASE_DB_URL ||
+      process.env.SUPABASE_DB ||
+      process.env.DATABASE_URL ||
+      process.env.SUPABASE_DB_PASSWORD,
+  );
+}
+
+if (!hasDatabaseEnv()) {
+  try {
+    process.loadEnvFile(path.resolve(import.meta.dirname, "..", ".env"));
+  } catch {
+    // no .env, or an unparsable one — the explicit error below covers it
+  }
+}
+
 const PROJECT_REF = "gatnzfjpuokopqyksqoy";
 const POOLER_HOST = "aws-0-us-east-1.pooler.supabase.com";
 const OUT_FILE = path.resolve("backend/sql/20261128_schema_baseline.sql");
@@ -50,13 +70,19 @@ const MANAGED_SCHEMAS = [
 const GRANT_ROLES = new Set(["anon", "authenticated", "service_role", "public"]);
 
 function connectionString() {
-  const url = process.env.SUPABASE_DB_URL?.trim();
+  // SUPABASE_DB_URL is canonical; the others are the names people actually use.
+  const url = (
+    process.env.SUPABASE_DB_URL ??
+    process.env.SUPABASE_DB ??
+    process.env.DATABASE_URL ??
+    ""
+  ).trim();
   if (url) return url;
-  const password = process.env.SUPABASE_DB_PASSWORD?.trim();
+  const password = (process.env.SUPABASE_DB_PASSWORD ?? "").trim();
   if (!password) {
     console.error(
-      "Missing connection details: set SUPABASE_DB_URL (full postgres URI) " +
-        "or SUPABASE_DB_PASSWORD.",
+      "Missing connection details: set SUPABASE_DB_URL (full postgres URI; " +
+        "SUPABASE_DB and DATABASE_URL are accepted too) or SUPABASE_DB_PASSWORD.",
     );
     process.exit(2);
   }
