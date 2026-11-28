@@ -80,7 +80,7 @@ function withHeaders(response, url) {
 const ALLOWED_TYPES = {
   "training-materials": [
     "application/pdf", "text/plain", "application/zip", "application/x-zip-compressed",
-    "image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml", "image/heic",
+    "image/jpeg", "image/png", "image/webp", "image/gif", "image/heic",
     "video/mp4", "video/webm", "video/quicktime", "audio/mpeg", "audio/wav", "audio/ogg", "audio/mp4", "audio/x-m4a",
     "application/msword", "application/vnd.ms-powerpoint", "application/vnd.ms-excel",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -89,7 +89,7 @@ const ALLOWED_TYPES = {
   ],
   "classwork-submissions": [
     "application/pdf", "text/plain", "application/zip", "application/x-zip-compressed",
-    "image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml", "image/heic",
+    "image/jpeg", "image/png", "image/webp", "image/gif", "image/heic",
     "video/mp4", "video/webm", "video/quicktime", "audio/mpeg", "audio/wav", "audio/ogg", "audio/mp4", "audio/x-m4a",
     "application/msword", "application/vnd.ms-powerpoint", "application/vnd.ms-excel",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -100,7 +100,15 @@ const ALLOWED_TYPES = {
     "application/pdf", "image/jpeg", "image/png", "image/webp",
     "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   ],
-  "chat-attachments": null,
+  "chat-attachments": [
+    "application/pdf", "text/plain", "application/zip", "application/x-zip-compressed",
+    "image/jpeg", "image/png", "image/webp", "image/gif", "image/heic",
+    "video/mp4", "video/webm", "video/quicktime", "audio/mpeg", "audio/wav", "audio/ogg", "audio/mp4", "audio/x-m4a",
+    "application/msword", "application/vnd.ms-powerpoint", "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  ],
   "transparency-reports": ["application/pdf"],
 };
 
@@ -111,6 +119,15 @@ const BUCKET_LIMITS = {
   "chat-attachments": 25 * MB,
   "transparency-reports": 10 * MB,
 };
+
+// Only these types render inline. Everything else is forced to download, so a
+// stored HTML/SVG file can never execute on the portal origin.
+const INLINE_TYPES = new Set([
+  "application/pdf",
+  "image/jpeg", "image/png", "image/webp", "image/gif", "image/heic",
+  "video/mp4", "video/webm", "video/quicktime",
+  "audio/mpeg", "audio/wav", "audio/ogg", "audio/mp4", "audio/x-m4a",
+]);
 
 const EMPTY_SHA256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 const encoder = new TextEncoder();
@@ -254,7 +271,10 @@ function base64url(bytes) {
 async function downloadToken(env, bucket, key, expires) {
   const config = b2Config(env);
   if (!config) return "";
-  return base64url(await hmac(config.secret, `${bucket}\n${key}\n${expires}`));
+  // A dedicated signing secret can be rotated without invalidating B2 access.
+  // Fall back to the B2 application key so existing deployments keep working.
+  const secret = env.BLOB_SIGNING_SECRET || config.secret;
+  return base64url(await hmac(secret, `${bucket}\n${key}\n${expires}`));
 }
 
 function sameSignature(a, b) {
@@ -406,12 +426,21 @@ async function handleBlob(request, env, url) {
     const response = await fetch(getSigned.url, { method: "GET", headers: getSigned.headers });
     if (!response.ok) return json({ error: "The file is unavailable." }, response.status === 404 ? 404 : 502);
     const headers = new Headers();
-    headers.set("content-type", response.headers.get("content-type") || "application/octet-stream");
+    const contentType = (response.headers.get("content-type") || "application/octet-stream")
+      .split(";")[0].trim().toLowerCase();
+    headers.set("content-type", contentType);
     const length = response.headers.get("content-length");
     if (length) headers.set("content-length", length);
     headers.set("cache-control", "private, max-age=300");
     headers.set("x-content-type-options", "nosniff");
-    if (url.searchParams.get("download") === "1") headers.set("content-disposition", disposition(url.searchParams.get("name")));
+    headers.set("cross-origin-resource-policy", "same-site");
+    // Even if a user-controlled file is served inline, it cannot run script or
+    // be embedded as a first-party document.
+    headers.set("content-security-policy", "default-src 'none'; sandbox");
+    const wantsDownload = url.searchParams.get("download") === "1";
+    if (wantsDownload || !INLINE_TYPES.has(contentType)) {
+      headers.set("content-disposition", disposition(url.searchParams.get("name") || key.split("/").pop()));
+    }
     return new Response(response.body, { status: 200, headers });
   }
 

@@ -1,24 +1,12 @@
-/* Africa of Hope portal — runtime backend configuration.
+/**
+ * Runtime backend configuration, loaded by index.html before the app bundle.
  *
- * This file is served next to index.html and runs before the app starts, so a
- * deployment can be pointed at its school database by editing this one file on
- * the server. No rebuild, no build-time secrets, no dashboard: it works on any
- * static host (Netlify, Vercel, Cloudflare Pages, GitHub Pages, cPanel, S3,
- * nginx, ...). Reload the page after editing.
- *
- * Fill in the public credentials of the Supabase project that holds the school
- * database (Supabase dashboard → Project Settings → API):
- *
- *   supabaseUrl      https://<project-ref>.supabase.co
- *   supabaseAnonKey  the anon / publishable key
- *
- * Both are public values: they ship to every browser. NEVER put the
- * service_role / secret key here — it bypasses every access policy.
- *
- * Leave both empty to use VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY when the
- * site is built with them instead. Values set here take priority over the build.
+ * These values are public: the URL and the Supabase anon/publishable key are
+ * shipped to every browser. Never put a service_role or secret key here — it
+ * bypasses every access policy. A build can still supply the values from
+ * VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY; values set here take priority.
  */
 window.AOH_CONFIG = {
-  supabaseUrl: "",
-  supabaseAnonKey: "",
+  supabaseUrl: "https://gatnzfjpuokopqyksqoy.supabase.co",
+  supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhdG56ZmpwdW9rb3BxeWtzcW95Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIyNjAyMTcsImV4cCI6MjEwNzgzNjIxN30.g0tptBFvclxGhqePFrWz0nov3R_DRsOgnSQJpKjdDT8",
 };

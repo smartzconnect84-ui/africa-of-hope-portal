@@ -191,6 +191,28 @@ function isStaff(role: string) {
   return /admin|registrar|director|teacher|instructor|admission|support/i.test(role);
 }
 
+/** Only these roles may notify the whole institution. */
+function canBroadcast(role: string) {
+  return /^(super admin|school admin|registrar|director of education)$/i.test(role.trim());
+}
+
+/** Same-origin destination only; anything else becomes the notifications tab. */
+function validUrl(value: unknown) {
+  const raw = String(value ?? "#notifications").trim();
+  if (!raw.startsWith("/") && !raw.startsWith("#")) return "#notifications";
+  return raw.slice(0, 300);
+}
+
+/** Constant-time comparison for the shared dispatch token. */
+function sameToken(a: string, b: string) {
+  const left = new TextEncoder().encode(a);
+  const right = new TextEncoder().encode(b);
+  let diff = left.length ^ right.length;
+  const len = Math.max(left.length, right.length);
+  for (let i = 0; i < len; i++) diff |= (left[i] ?? 0) ^ (right[i] ?? 0);
+  return diff === 0;
+}
+
 function audienceMatch(audience: string, role: string) {
   const r = role.toLowerCase();
   if (audience === 'students') return r.includes('student');
@@ -214,7 +236,7 @@ Deno.serve(async (req) => {
   const dispatchToken = req.headers.get('x-push-dispatch') ?? '';
   if (dispatchToken) {
     const { data } = await admin.from('push_dispatch_token').select('token').limit(1).maybeSingle();
-    if (!data || String(data.token) !== dispatchToken) return json({ error: 'Unauthorized' }, 401);
+    if (!data || !sameToken(String(data.token), dispatchToken)) return json({ error: 'Unauthorized' }, 401);
 
     try {
       if (body.action === 'health') {
@@ -249,6 +271,12 @@ Deno.serve(async (req) => {
   const audience = String(body.audience ?? 'all').toLowerCase().slice(0, 40);
   const direct = String(body.user_id ?? (audience.startsWith('user:') ? audience.slice(5) : '')).trim();
 
+  // Teachers and other staff may target classes, but an institution-wide send is
+  // an administrator decision — the same rule the older sender enforced.
+  if ((audience === 'all' || audience === 'all_users') && !canBroadcast(String(profile?.role ?? ''))) {
+    return json({ error: 'Institution-wide sends require an administrator or registrar.' }, 403);
+  }
+
   const { data: people } = await admin.from('profiles').select('id, role').limit(2000);
   const recipients = direct
     ? [direct]
@@ -264,7 +292,7 @@ Deno.serve(async (req) => {
     kind: 'announcement',
     title,
     body: message,
-    url: String(body.url ?? '#notifications').slice(0, 300),
+    url: validUrl(body.url),
   }));
 
   // Inserting into `notifications` is what fans out to the outbox and Knock,
