@@ -14,6 +14,7 @@ import { execFileSync } from "node:child_process";
 import { cp, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { resolveSupabaseConfig, writeRuntimeConfig } from "./aoh-config.mjs";
+import { registerDeployOrigin } from "./register-auth-origin.mjs";
 
 const root = process.cwd();
 const assetsDir = path.join(root, "sites/assets");
@@ -48,6 +49,10 @@ if (backend.url) {
     "[config] no Supabase settings found — set SUPABASE_URL and SUPABASE_ANON_KEY or keep public/aoh-config.js",
   );
 }
+
+// Sign-in links only work on origins GoTrue allows. Register the host this
+// build is for, so a new domain needs no dashboard edit.
+await registerDeployOrigin({ projectUrl: backend.url });
 
 // Sites only accepts public build output: no hidden files/directories, source
 // maps, keys or symlinks. Stage dist/client into sites/assets and leave out the
