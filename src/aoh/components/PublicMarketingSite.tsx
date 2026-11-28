@@ -414,6 +414,13 @@ export default function PublicMarketingSite({ onEnterPortal }: { onEnterPortal: 
   return (
     <MotionConfig reducedMotion="user">
     <div id="top" data-visual-mode="light" data-device={device} data-public-font={presentation.font} data-icon-weight={presentation.iconWeight} className="aoh-public min-h-[100dvh] scroll-smooth bg-[#f6f8f7] text-slate-900">
+      {/* WCAG 2.4.1: first Tab stop on every page skips the repeated header links. */}
+      <a
+        href="#public-main"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:inline-flex focus:min-h-11 focus:items-center focus:rounded-xl focus:bg-white focus:px-4 focus:text-sm focus:font-semibold focus:text-emerald-900 focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-700"
+      >
+        Skip to content
+      </a>
       {w.announcementEnabled && bannerItems.length > 0 && (
         <div className="overflow-hidden bg-amber-400 text-emerald-950" role="region" aria-label="Announcements">
           <div className="sr-only" aria-live="polite">
@@ -537,7 +544,7 @@ export default function PublicMarketingSite({ onEnterPortal }: { onEnterPortal: 
       </AnimatePresence>
 
       <AnimatePresence mode="wait">
-        <motion.main key={viewToPath(view)} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+        <motion.main id="public-main" tabIndex={-1} key={viewToPath(view)} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
           {!isCurrentPageVisible && hiddenKey ? <PageUnavailable label={hiddenKey} /> : null}
           {isCurrentPageVisible && (
             <>

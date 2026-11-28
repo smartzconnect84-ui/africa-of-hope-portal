@@ -59,8 +59,12 @@ export default defineConfig({
     //     live: SSR body 12.9KB shell-only → 27.9KB with full <main>.)
     // The in-pod AI never touches any of this: it edits file-based
     // routes + each route's head() exactly as before.
+    // crawlLinks is OFF: the marketing site routes are owned by react-router
+    // (BrowserRouter) inside the app, so TanStack cannot render them and the
+    // crawler used to fail the build on the first in-page link. Only "/" is
+    // prerendered; every other path is served the same document by the Worker.
     tanstackStart({
-      prerender: { enabled: true, crawlLinks: true },
+      prerender: { enabled: true, crawlLinks: false },
     }),
     viteReact(),
     tailwindcss(),

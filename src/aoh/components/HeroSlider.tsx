@@ -232,7 +232,9 @@ export default function HeroSlider({ onOpenApply, onEnterPortal }: HeroSliderPro
             >
               <img
                 src={s.image}
-                alt=""
+                // Only the visible slide is content; the stacked ones stay decorative.
+                alt={active ? `${s.title} ${s.highlight}`.replace(/\s+/g, " ").trim() : ""}
+                aria-hidden={active ? undefined : true}
                 draggable={false}
                 loading={i === 0 ? "eager" : "lazy"}
                 decoding="async"

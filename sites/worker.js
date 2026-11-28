@@ -16,6 +16,67 @@ const FILE_EXT = /\.[a-z0-9]{2,5}$/i;
 const BLOB_PREFIX = "/api/blob/";
 const MB = 1024 * 1024;
 
+// Public marketing routes the SPA owns (mirrors src/aoh/lib/publicRoutes.ts).
+// Anything else is a genuine 404 instead of a 200 that renders the home page.
+const PUBLIC_ROUTE =
+  /^\/(?:about(?:-us|-who-we-are)?|programmes?|programmes\/[a-z0-9-]+|programs|programs\/[a-z0-9-]+|admissions|apply|apply-online|impact|our-impact|term-dates|policies|transparency|cookies|donate|blog|blog\/.+|team|our-team|campus|campus-life|verify|portal|newsletter\/(?:confirm|unsubscribe))\/?$/i;
+
+// Baseline hardening for every HTML/asset response. The site handles student
+// accounts on this origin, so HSTS and a permissive-but-real CSP are better than
+// none; img/connect allow any https origin because media and Supabase live off-site.
+const SECURITY_HEADERS = {
+  "strict-transport-security": "max-age=31536000; includeSubDomains",
+  "x-content-type-options": "nosniff",
+  "referrer-policy": "strict-origin-when-cross-origin",
+  "permissions-policy": "geolocation=(), microphone=(), camera=()",
+  "content-security-policy":
+    "default-src 'self'; base-uri 'self'; object-src 'none'; " +
+    "script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+    "font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; " +
+    "media-src 'self' blob: https:; connect-src 'self' https: wss:; frame-src 'self' https:; " +
+    "worker-src 'self' blob:",
+};
+
+const NOT_FOUND_HTML = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Page not found | AFRICA OF HOPE</title>
+<style>
+  body{margin:0;min-height:100dvh;display:grid;place-items:center;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#f6f8f7;color:#022c22}
+  main{max-width:34rem;padding:2rem;text-align:center}
+  p.eyebrow{margin:0;font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#047857}
+  h1{margin:.75rem 0 0;font-size:1.75rem;line-height:1.2}
+  p.body{margin:.75rem 0 0;color:#475569;font-size:.95rem;line-height:1.6}
+  a.cta{display:inline-flex;margin-top:1.5rem;padding:.75rem 1.25rem;border-radius:.75rem;background:#065f46;color:#fff;font-weight:600;text-decoration:none}
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">404</p>
+  <h1>This page could not be found.</h1>
+  <p class="body">The link may be old or mistyped. The school’s programmes, admissions and certificate verification pages are all one click away.</p>
+  <a class="cta" href="/">Back to the home page</a>
+</main>
+</body>
+</html>`;
+
+/** Adds the security headers (and immutable caching for hashed assets). */
+function withHeaders(response, url) {
+  const headers = new Headers(response.headers);
+  for (const [name, value] of Object.entries(SECURITY_HEADERS)) headers.set(name, value);
+  if (url.pathname.startsWith("/assets/")) {
+    headers.set("cache-control", "public, max-age=31536000, immutable");
+  }
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 const ALLOWED_TYPES = {
   "training-materials": [
     "application/pdf", "text/plain", "application/zip", "application/x-zip-compressed",
@@ -380,20 +441,38 @@ export default {
       }
     }
 
-    // Assets first — the platform binding is the static build.
+    // Assets and prerendered pages first — the platform binding is the static build.
     const asset = await env.ASSETS.fetch(request);
-    if (asset.status !== 404 || FILE_EXT.test(url.pathname)) return asset;
+    if (asset.status !== 404 || FILE_EXT.test(url.pathname)) return withHeaders(asset, url);
 
-    // Browser navigation to an unknown path: hand the SPA its entry document.
-    if (request.method !== "GET" && request.method !== "HEAD") return asset;
-    const acceptsHtml = (request.headers.get("accept") || "").includes("text/html");
-    if (!acceptsHtml) return asset;
+    if (request.method !== "GET" && request.method !== "HEAD") return withHeaders(asset, url);
 
-    return env.ASSETS.fetch(
+    // Unknown paths get a real 404 (no soft-404 home page), so crawlers never
+    // index junk URLs as duplicates of the home page.
+    const route = url.pathname === "/" ? "/" : url.pathname.replace(/\/+$/, "");
+    if (route !== "/" && !PUBLIC_ROUTE.test(route)) {
+      return withHeaders(
+        new Response(NOT_FOUND_HTML, {
+          status: 404,
+          headers: {
+            "content-type": "text/html; charset=utf-8",
+            "cache-control": "no-store",
+            "x-robots-tag": "noindex",
+          },
+        }),
+        url,
+      );
+    }
+
+    // App route without a prerendered file: serve the SPA entry. Deliberately no
+    // Accept-header gate — Facebook, LinkedIn, WhatsApp and other preview
+    // crawlers send `Accept: */*` and must still receive the page.
+    const shell = await env.ASSETS.fetch(
       new Request(new URL("/index.html", url), {
         method: "GET",
         headers: request.headers,
       }),
     );
+    return withHeaders(shell, url);
   },
 };

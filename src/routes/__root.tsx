@@ -9,10 +9,15 @@ import {
 } from "@tanstack/react-router";
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
+import { CANONICAL_ORIGIN, OG_IMAGE, OG_IMAGE_ALT, SAME_AS_PROFILES, SITE_NAME } from "@/aoh/lib/seo";
 
 const AohEntry = lazy(() => import("@/aoh/entry"));
 
 function ClientApp() {
+  // Client-only on purpose: the app is built on BrowserRouter, which cannot be
+  // rendered by the prerenderer (no `document`), and rendering the home page
+  // into every route's static HTML would create hydration mismatches on deep
+  // links. Crawlers that do not run JS get the <noscript> summary below.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
@@ -22,6 +27,29 @@ function ClientApp() {
     </Suspense>
   );
 }
+
+// Static organisation schema in the document head, before any JS runs. The
+// client's applyPublicSeo() finds this script by its data attribute and rewrites
+// it per page, so there is only ever one copy.
+const ORGANIZATION_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "EducationalOrganization",
+  name: SITE_NAME,
+  description: site.description,
+  url: `${CANONICAL_ORIGIN}/`,
+  image: OG_IMAGE,
+  telephone: "+231776679963",
+  email: "afrohope033@gmail.com",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Boystown Junction",
+    addressLocality: "Lower Margibi",
+    addressRegion: "Margibi County",
+    addressCountry: "LR",
+    postalCode: "1000",
+  },
+  sameAs: SAME_AS_PROFILES,
+};
 import { site } from "@/data/content";
 import appCss from "@/styles.css?url";
 // Side-effect import (in addition to the ?url link above): makes Vite inject the
@@ -36,7 +64,11 @@ import "@/styles.css";
 // a page you still just drop a file in src/routes/ and give it a head().
 // Per-route head() (title/description/og) merges over the defaults here.
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
+  head: () => {
+    // Optional, build-time only: set VITE_GOOGLE_SITE_VERIFICATION to emit the
+    // Search Console tag in the static HTML (not just after hydration).
+    const googleVerification = (import.meta.env.VITE_GOOGLE_SITE_VERIFICATION as string | undefined)?.trim();
+    return {
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
@@ -45,6 +77,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: site.title },
       { property: "og:description", content: site.description },
       { property: "og:type", content: "website" },
+      // Deliberately no static canonical/og:url: this one document is served for
+      // every route, and a home canonical in raw HTML would alias deep pages to
+      // "/" for crawlers that do not run JS. The client sets both per view.
+      { property: "og:site_name", content: SITE_NAME },
+      { property: "og:image", content: OG_IMAGE },
+      { property: "og:image:alt", content: OG_IMAGE_ALT },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: site.title },
+      { name: "twitter:description", content: site.description },
+      { name: "twitter:image", content: OG_IMAGE },
+      ...(googleVerification ? [{ name: "google-site-verification", content: googleVerification }] : []),
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -56,7 +99,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       // --font-* tokens in src/theme.css together; never ship system fonts.
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" },
     ],
-  }),
+    };
+  },
   component: RootComponent,
   notFoundComponent: NotFound,
   errorComponent: ErrorPage,
@@ -86,6 +130,11 @@ function RootDocument({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
+        <script
+          type="application/ld+json"
+          data-aoh-page-schema="true"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(ORGANIZATION_SCHEMA) }}
+        />
         {/* Runtime backend configuration. Served from /aoh-config.js so any host
             can point the portal at its database by editing one public file —
             no rebuild and no provider-specific secret injection. A classic
@@ -94,6 +143,27 @@ function RootDocument({ children }: { children: ReactNode }) {
       </head>
       <body suppressHydrationWarning>
         {children}
+        {/* No-JS and non-rendering crawlers: plain, crawlable summary + links.
+            Inside <noscript> so it never competes with the hydrated app. */}
+        <noscript>
+          <div style={{ maxWidth: "48rem", margin: "0 auto", padding: "1.5rem", fontFamily: "system-ui, sans-serif", color: "#022c22" }}>
+            <h1>AFRICA OF HOPE School of Professional Studies</h1>
+            <p>
+              Practical certificate programmes in technology, trades, business and hospitality at
+              Boystown Junction, Lower Margibi, Liberia. Tuition is sponsored: learners pay only a
+              one-time registration package, and every certificate carries a serial number that can
+              be verified online.
+            </p>
+            <ul>
+              <li><a href="/programmes">Programmes</a></li>
+              <li><a href="/admissions">Admissions</a></li>
+              <li><a href="/verify">Verify a certificate</a></li>
+              <li><a href="/about">About the school</a></li>
+              <li><a href="/blog">News and insights</a></li>
+            </ul>
+            <p>This website needs JavaScript for the full experience, including the student portal.</p>
+          </div>
+        </noscript>
         {/* swarmz-bridge surfaces console + fetch + vite errors back to
             the editor overlay. It self-noops when not iframed. Injected
             here (not via index.html, which no longer exists) so it ships

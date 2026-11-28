@@ -1,5 +1,8 @@
+// The apex host (africaofhopelr.org) answers HTTP 522; www serves the site, so
+// every canonical/OG/JSON-LD URL must use it. Point the apex at the same Worker
+// (or 301 it here) before ever switching this back.
 export const CANONICAL_ORIGIN =
-  "https://africaofhopelr.org";
+  "https://www.africaofhopelr.org";
 
 export const SITE_NAME =
   "AFRICA OF HOPE SCHOOL OF PROFESSIONAL STUDIES";
@@ -11,7 +14,7 @@ export const SITE_KEYWORDS =
   "AFRICA OF HOPE, professional studies Liberia, certificate programmes Liberia, online admissions Liberia, verify certificate Liberia, vocational training Margibi, computer training Liberia";
 
 export const OG_IMAGE =
-  "https://africaofhopelr.org/og-card.png";
+  "https://www.africaofhopelr.org/og-card.png";
 
 export const OG_IMAGE_ALT =
   "AFRICA OF HOPE School of Professional Studies — practical certificate programmes with verifiable certificates in Liberia";
@@ -67,7 +70,7 @@ export const SEO_SEARCH_PHRASES = [
  * LinkedIn / X / Facebook URLs when they exist.
  */
 export const SAME_AS_PROFILES = [
-  "https://africaofhopelr.org/",
+  "https://www.africaofhopelr.org/",
   "https://wa.me/231776679963",
 ];
 
