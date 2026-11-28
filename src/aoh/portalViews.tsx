@@ -203,7 +203,7 @@ function PeopleHub({ ctx }: { ctx: PortalViewContext }) {
 
 function DashboardView({ role }: { role: Role | null }) {
   if (role === "Student") return <StudentPortal />;
-  if (role === "Teacher") return <TeacherDashboard />;
+  if (role === "Teacher-Instructor") return <TeacherDashboard />;
   if (role === "Admission Officer") return <PeopleManagement initialTab="applicants" />;
   if (role === "Customer Care Officer") return <Helpdesk key="dashboard-helpdesk" />;
   if (role === "Data Entry Officer") return <PeopleManagement />;
@@ -236,7 +236,7 @@ export const PORTAL_VIEWS: PortalView[] = [
   {
     key: "dashboard",
     label: (ctx) =>
-      ctx.role === "Student" ? "My Portal" : ctx.role === "Teacher" ? "My Workspace" : "Dashboard",
+      ctx.role === "Student" ? "My Portal" : ctx.role === "Teacher-Instructor" ? "My Workspace" : "Dashboard",
     icon: LayoutDashboard,
     visible: () => true,
     render: (ctx) => <DashboardView role={ctx.role} />,
@@ -264,7 +264,7 @@ export const PORTAL_VIEWS: PortalView[] = [
   },
   {
     key: "academic-planning",
-    label: (ctx) => ctx.role === "Student" ? "My Course Plan" : ctx.role === "Teacher" ? "Course Planning" : "Academic Approvals",
+    label: (ctx) => ctx.role === "Student" ? "My Course Plan" : ctx.role === "Teacher-Instructor" ? "Course Planning" : "Academic Approvals",
     icon: CalendarRange,
     visible: (ctx) => ctx.canAny("courses.enroll", "academic_plans.manage", "academic_plans.approve"),
     render: () => <AcademicPlanning />,
@@ -373,7 +373,7 @@ export const PORTAL_VIEWS: PortalView[] = [
     icon: TrendingUp,
     visible: (ctx) =>
       ctx.canAny("reports.manage", "grades.manage", "attendance.manage", "academic_plans.manage", "academic_plans.approve") ||
-      ctx.role === "Teacher" ||
+      ctx.role === "Teacher-Instructor" ||
       ctx.role === "School Admin" ||
       ctx.role === "Super Admin" ||
       ctx.role === "Director of Education" ||
@@ -391,7 +391,7 @@ export const PORTAL_VIEWS: PortalView[] = [
     key: "cohort-learning",
     label: (ctx) => (ctx.role === "Student" ? "My Cohorts" : "Cohort Learning"),
     icon: GraduationCap,
-    visible: (ctx) => ctx.role === "Student" || ctx.role === "Teacher" || ctx.canAny("cohorts.manage", "academic_plans.manage", "academic_plans.approve"),
+    visible: (ctx) => ctx.role === "Student" || ctx.role === "Teacher-Instructor" || ctx.canAny("cohorts.manage", "academic_plans.manage", "academic_plans.approve"),
     render: (ctx) => <CohortLearning canManage={ctx.can("cohorts.manage")} />,
   },
   {

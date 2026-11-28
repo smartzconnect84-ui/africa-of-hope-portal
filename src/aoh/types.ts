@@ -1,7 +1,7 @@
 export type Role =
   | "Super Admin"
   | "School Admin"
-  | "Teacher"
+  | "Teacher-Instructor"
   | "Registrar"
   | "Admission Officer"
   | "Finance Officer"

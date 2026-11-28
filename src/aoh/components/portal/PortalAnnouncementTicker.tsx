@@ -9,7 +9,7 @@ function visibleTo(a: Announcement, role: string, now: number): boolean {
   if (a.scheduledAt && new Date(a.scheduledAt).getTime() > now) return false;
   if (a.expiresAt && new Date(a.expiresAt).getTime() < now) return false;
   const audience = a.audience ?? "all";
-  if (audience === "students") return role === "Student" || role !== "Teacher";
+  if (audience === "students") return role === "Student" || role !== "Teacher-Instructor";
   if (audience === "teachers") return role !== "Student";
   return true;
 }

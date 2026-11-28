@@ -210,7 +210,7 @@ const GROUP_BG: Record<string, string> = {
 
 function sidebarGroupLabel(role: string | null): string {
   if (role === "Student") return "Student Desk";
-  if (role === "Teacher") return "Instructors";
+  if (role === "Teacher-Instructor" || role === "Teacher") return "Teacher-Instructors";
   return "Administration";
 }
 function Pop({

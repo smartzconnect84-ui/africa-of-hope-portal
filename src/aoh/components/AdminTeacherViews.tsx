@@ -799,7 +799,7 @@ export function CohortCoordinator() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyCohort);
   const [roster, setRoster] = useState<string[]>([]);
-  const teachers = state.users.filter((u) => u.role === "Teacher");
+  const teachers = state.users.filter((u) => u.role === "Teacher-Instructor");
 
   const toggleStudent = (id: string) =>
     setRoster((r) => (r.includes(id) ? r.filter((x) => x !== id) : [...r, id]));

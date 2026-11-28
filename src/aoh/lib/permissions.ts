@@ -14,7 +14,7 @@ import type { Role } from "../types";
 export const ROLES: Role[] = [
   "Super Admin",
   "School Admin",
-  "Teacher",
+  "Teacher-Instructor",
   "Registrar",
   "Admission Officer",
   "Finance Officer",
@@ -31,7 +31,7 @@ export const ROLES: Role[] = [
 export const STAFF_ROLES: Role[] = [
   "Super Admin",
   "School Admin",
-  "Teacher",
+  "Teacher-Instructor",
   "Registrar",
   "Admission Officer",
   "Finance Officer",
@@ -199,7 +199,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<Exclude<Role, "Super Admin">, Perm
     "assistant.use",
     "assistant.admin_help",
   ],
-  Teacher: [
+  "Teacher-Instructor": [
     "academic_plans.manage",
     "lessons.manage",
     "materials.manage",

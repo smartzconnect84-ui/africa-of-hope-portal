@@ -94,7 +94,7 @@ function matches(topic: Topic, role: string): boolean {
   const staff = role !== "Student";
   const admin = role === "Super Admin" || role === "School Admin";
   return topic.audience.some(
-    (a) => a === "all" || (a === "student" && role === "Student") || (a === "teacher" && role === "Teacher") || (a === "staff" && staff) || (a === "admin" && admin),
+    (a) => a === "all" || (a === "student" && role === "Student") || (a === "teacher" && role === "Teacher-Instructor") || (a === "staff" && staff) || (a === "admin" && admin),
   );
 }
 
@@ -152,7 +152,7 @@ export default function PortalGuide() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900"><Headphones className="h-5 w-5 text-emerald-700" /> Portal guide</h2>
-          <p className="mt-1 text-sm text-slate-600">Read the steps, or press Listen to hear them. Shown for your role: {role === "Teacher" ? "Instructor" : role}.</p>
+          <p className="mt-1 text-sm text-slate-600">Read the steps, or press Listen to hear them. Shown for your role: {role === "Teacher-Instructor" ? "Teacher-Instructor" : role}.</p>
         </div>
         {supported && (
           <div className="flex flex-wrap items-center gap-2">

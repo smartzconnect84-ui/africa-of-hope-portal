@@ -45,7 +45,7 @@ export default function CourseDiscussions() {
     if (!currentUser) return [];
     return state.cohorts.filter((c) => currentUser.role === "Student"
       ? currentUser.cohortIds.includes(c.id)
-      : currentUser.role === "Teacher" ? c.teacherId === currentUser.id : true).map((c) => c.id);
+      : currentUser.role === "Teacher-Instructor" ? c.teacherId === currentUser.id : true).map((c) => c.id);
   }, [state.cohorts, currentUser]);
   const cohortKey = allowedCohortIds.join(",");
   const refresh = async () => {

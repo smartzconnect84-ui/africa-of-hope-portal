@@ -359,7 +359,7 @@ function AddStaffDialog({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [title, setTitle] = useState("");
-  const [role, setRole] = useState<Role>("Teacher");
+  const [role, setRole] = useState<Role>("Teacher-Instructor");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -372,7 +372,7 @@ function AddStaffDialog({
     setEmail("");
     setPhone("");
     setTitle("");
-    setRole("Teacher");
+    setRole("Teacher-Instructor");
     setPassword("");
   }
 

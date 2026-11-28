@@ -80,10 +80,10 @@ const pick = async (role, exclude) => {
 const personas = {
   studentA: await pick("Student"),
   studentB: null,
-  teacher: await pick("Teacher"),
+  teacher: await pick("Teacher-Instructor"),
 };
 personas.studentB = personas.studentA ? await pick("Student", personas.studentA) : null;
-const teacherB = personas.teacher ? await pick("Teacher", personas.teacher) : null;
+const teacherB = personas.teacher ? await pick("Teacher-Instructor", personas.teacher) : null;
 
 for (const [key, id] of Object.entries({ ...personas, teacherB })) {
   if (!id) {

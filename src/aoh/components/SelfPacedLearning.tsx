@@ -45,7 +45,7 @@ import { panelClass, SectionHeader, EmptyState } from "./Navigation";
 import { toast } from "sonner";
 
 const isInstructor = (role: string | null | undefined) =>
-  role === "Teacher" || role === "Instructor" || role === "School Admin" || role === "Super Admin" || role === "Director of Education";
+  role === "Teacher-Instructor" || role === "Instructor" || role === "School Admin" || role === "Super Admin" || role === "Director of Education";
 
 export default function SelfPacedLearning() {
   const { currentUser, state, updateProgram, issueCertificate } = useApp();

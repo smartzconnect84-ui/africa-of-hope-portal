@@ -84,7 +84,7 @@ export default function CohortLearning({ canManage }: { canManage: boolean }) {
     if (!currentUser) return [];
     if (canManage) return state.cohorts;
     if (role === "Student") return state.cohorts.filter((c) => c.studentIds.includes(currentUser.id));
-    if (role === "Teacher") return state.cohorts.filter((c) => c.teacherId === currentUser.id);
+    if (role === "Teacher-Instructor") return state.cohorts.filter((c) => c.teacherId === currentUser.id);
     return state.cohorts;
   }, [state.cohorts, currentUser, canManage, role]);
 
@@ -105,7 +105,7 @@ export default function CohortLearning({ canManage }: { canManage: boolean }) {
     return res.shared;
   };
 
-  const title = role === "Student" ? "My Cohorts" : role === "Teacher" ? "My Assigned Cohorts" : "Cohort Learning";
+  const title = role === "Student" ? "My Cohorts" : role === "Teacher-Instructor" ? "My Assigned Cohorts" : "Cohort Learning";
   const subtitle = role === "Student"
     ? "Your cohorts, learning plan, weekly modules and progress."
     : canManage
