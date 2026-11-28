@@ -1,11 +1,13 @@
 import {
   SUPABASE_ANON_KEY,
+  SUPABASE_CONFIG_SOURCE,
   SUPABASE_PROJECT_REF,
   SUPABASE_URL,
   SUPABASE_USING_ENV,
   isSupabaseConfigured,
   supabase,
 } from "@/aoh/integrations/supabase/client";
+import type { BackendConfigSource } from "@/aoh/lib/runtimeConfig";
 
 export interface TableCheck {
   table: string;
@@ -17,6 +19,7 @@ export interface TableCheck {
 export interface HealthResult {
   configured: boolean;
   usingEnv: boolean;
+  configSource: BackendConfigSource;
   url: string;
   projectRef: string;
   anonKeyPreview: string;
@@ -58,6 +61,7 @@ export async function checkSupabaseHealth(): Promise<HealthResult> {
   const base: Omit<HealthResult, "tables" | "buckets"> = {
     configured: isSupabaseConfigured(),
     usingEnv: SUPABASE_USING_ENV,
+    configSource: SUPABASE_CONFIG_SOURCE,
     url: SUPABASE_URL,
     projectRef: SUPABASE_PROJECT_REF,
     anonKeyPreview: previewKey(SUPABASE_ANON_KEY),
@@ -122,9 +126,12 @@ export async function checkSupabaseHealth(): Promise<HealthResult> {
   return { ...base, tables, buckets };
 }
 
-export const ENV_SNIPPET = `# Supabase — paste into Backend → Secrets (MonstarX) or a local .env file
-VITE_SUPABASE_URL=https://your-project-ref.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-public-key`;
+// Works on any host: edit this file next to index.html and reload — no rebuild.
+export const ENV_SNIPPET = `/* aoh-config.js — next to index.html on your host */
+window.AOH_CONFIG = {
+  supabaseUrl: "https://your-project-ref.supabase.co",
+  supabaseAnonKey: "your-anon-public-key",
+};`;
 
 /** Paste into Supabase → SQL Editor. Does not touch system_settings. */
 export const STORAGE_BUCKET_SQL = `insert into storage.buckets (id, name, public)

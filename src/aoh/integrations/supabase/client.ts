@@ -1,6 +1,9 @@
 // Single Supabase client for the whole portal (the school's own project).
 //
-// Credentials come from the environment only — never hard-code them here:
+// The backend is resolved at RUNTIME from /aoh-config.js, which any host can
+// serve and edit without a rebuild — see src/aoh/lib/runtimeConfig.ts. Build-time
+// VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY are used only when that file leaves
+// the values empty, so the app is not tied to one hosting provider:
 //   VITE_SUPABASE_URL      https://<project-ref>.supabase.co
 //   VITE_SUPABASE_ANON_KEY the anon / publishable key (safe in the browser)
 // The service_role key must never appear in this file or any other file that
@@ -12,31 +15,36 @@
 // auth UI reports the backend as not configured.
 import { createClient } from "@supabase/supabase-js";
 import { authStorage } from "@/aoh/lib/authStorage";
+import { resolveBackendConfig } from "@/aoh/lib/runtimeConfig";
 
 const env = (import.meta as { env?: Record<string, string | undefined> }).env;
-const envUrl = (env?.VITE_SUPABASE_URL ?? "").trim();
-const envKey = (
-  env?.VITE_SUPABASE_ANON_KEY ??
-  env?.VITE_SUPABASE_PUBLISHABLE_KEY ??
-  ""
-).trim();
+const backend = resolveBackendConfig(
+  env?.VITE_SUPABASE_URL ?? "",
+  env?.VITE_SUPABASE_ANON_KEY ?? env?.VITE_SUPABASE_PUBLISHABLE_KEY ?? "",
+);
 
-/** True when both credentials came from the environment. */
-export const SUPABASE_USING_ENV = Boolean(envUrl && envKey);
+/** True when the credentials were baked in from the environment at build time. */
+export const SUPABASE_USING_ENV = backend.source === "build";
+
+/** True when /aoh-config.js supplied the credentials at runtime. */
+export const SUPABASE_USING_RUNTIME_CONFIG = backend.source === "runtime";
+
+/** Where the credentials came from: the runtime config file, the build or nowhere. */
+export const SUPABASE_CONFIG_SOURCE = backend.source;
 
 /** Project base URL, without a trailing slash. */
-export const SUPABASE_URL = SUPABASE_USING_ENV
-  ? envUrl.replace(/\/+$/, "")
+export const SUPABASE_URL = backend.configured
+  ? backend.url.replace(/\/+$/, "")
   : "https://supabase-not-connected.invalid";
 
 /** Public anon (or publishable) key — this value is safe to ship to browsers. */
-export const SUPABASE_ANON_KEY = SUPABASE_USING_ENV
-  ? envKey
+export const SUPABASE_ANON_KEY = backend.configured
+  ? backend.anonKey
   : "supabase-not-connected";
 
 /** Project ref, taken from the project URL hostname. */
 export const SUPABASE_PROJECT_REF = (() => {
-  if (!SUPABASE_USING_ENV) return "";
+  if (!backend.configured) return "";
   try {
     return new URL(SUPABASE_URL).hostname.split(".")[0] ?? "";
   } catch {
@@ -46,7 +54,7 @@ export const SUPABASE_PROJECT_REF = (() => {
 
 /** False when the backend is not connected — gate backend-dependent UI on this. */
 export function isSupabaseConfigured(): boolean {
-  return SUPABASE_USING_ENV;
+  return backend.configured;
 }
 
 // A recovery (password reset) link opens the auth page; the auth code reads this
@@ -63,9 +71,9 @@ export const OPENED_FROM_RECOVERY_LINK = (() => {
   }
 })();
 
-if (!SUPABASE_USING_ENV && typeof window !== "undefined") {
+if (!backend.configured && typeof window !== "undefined") {
   console.error(
-    "[supabase] Not connected: set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY (see .env.example).",
+    "[supabase] Not connected: add supabaseUrl and supabaseAnonKey to /aoh-config.js (works on any host, no rebuild), or set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY at build time (see .env.example).",
   );
 }
 

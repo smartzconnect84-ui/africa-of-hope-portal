@@ -16,6 +16,7 @@ import {
   checkSupabaseHealth,
   type HealthResult,
 } from "@/aoh/lib/supabaseHealth";
+import { backendConfigSourceLabel } from "@/aoh/lib/runtimeConfig";
 import { useApp } from "@/aoh/context/AppContext";
 
 function StatusDot({ ok }: { ok: boolean }) {
@@ -128,7 +129,7 @@ export default function BackendStatusCard() {
               </p>
               <p className="mt-0.5 text-[11px] text-slate-500">
                 {result.latencyMs != null ? `${result.latencyMs} ms` : live ? "Live sync active" : "Offline cache"} ·{" "}
-                {result.usingEnv ? "env keys" : "built-in keys"}
+                {backendConfigSourceLabel(result.configSource)}
               </p>
             </div>
             <div className="rounded-2xl border border-slate-200 p-3">
@@ -244,9 +245,11 @@ export default function BackendStatusCard() {
                   {ENV_SNIPPET}
                 </pre>
                 <p className="mt-2 text-[11px] text-slate-300">
-                  Add these in Backend → Secrets as VITE_SUPABASE_URL and
-                  VITE_SUPABASE_ANON_KEY, then redeploy. Use the anon public key —
-                  never the service-role key — because it ships in the browser.
+                  Save this as <code className="font-mono">aoh-config.js</code> next to{" "}
+                  <code className="font-mono">index.html</code> on any host and reload — no
+                  rebuild needed. Building with VITE_SUPABASE_URL and
+                  VITE_SUPABASE_ANON_KEY also works. Use the anon public key — never the
+                  service-role key — because it ships in the browser.
                 </p>
               </div>
             </div>

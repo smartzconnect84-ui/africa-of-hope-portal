@@ -86,6 +86,11 @@ function RootDocument({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
+        {/* Runtime backend configuration. Served from /aoh-config.js so any host
+            can point the portal at its database by editing one public file —
+            no rebuild and no provider-specific secret injection. A classic
+            script here runs before the app's module bundle. */}
+        <script src="/aoh-config.js" />
       </head>
       <body suppressHydrationWarning>
         {children}

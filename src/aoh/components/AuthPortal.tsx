@@ -1030,10 +1030,16 @@ export default function AuthPortal({
             <div className="rounded-3xl border-2 border-[#D4AF37] bg-gradient-to-b from-amber-50/70 via-white to-white p-5 shadow-xl shadow-[#D4AF37]/20 sm:p-7">
               {!isSupabaseConfigured() && (
                 <div role="alert" className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-left">
-                  <p className="text-sm font-semibold text-rose-800">Portal sign-in is offline — the school database is not connected in this build.</p>
+                  <p className="text-sm font-semibold text-rose-800">Portal sign-in is offline — no school database is configured for this deployment.</p>
                   <p className="mt-1 text-sm text-rose-700">
-                    Student and staff sign-in cannot work until the owner connects the backend. Owner: add VITE_AUTOBASE_URL
-                    and VITE_AUTOBASE_PUBLISHABLE_KEY under Manage → Backend → Secrets, then reload this page.
+                    Open <code className="rounded bg-rose-100 px-1 font-mono text-[11px] text-rose-800">aoh-config.js</code> next
+                    to <code className="rounded bg-rose-100 px-1 font-mono text-[11px] text-rose-800">index.html</code> on your
+                    host, fill in <code className="rounded bg-rose-100 px-1 font-mono text-[11px] text-rose-800">supabaseUrl</code>{" "}
+                    and <code className="rounded bg-rose-100 px-1 font-mono text-[11px] text-rose-800">supabaseAnonKey</code>{" "}
+                    (Supabase → Project Settings → API), then reload. No rebuild is needed; building with{" "}
+                    <code className="rounded bg-rose-100 px-1 font-mono text-[11px] text-rose-800">VITE_SUPABASE_URL</code> and{" "}
+                    <code className="rounded bg-rose-100 px-1 font-mono text-[11px] text-rose-800">VITE_SUPABASE_ANON_KEY</code>{" "}
+                    also works.
                   </p>
                 </div>
               )}
